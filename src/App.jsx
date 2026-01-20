@@ -23,7 +23,7 @@ const POSITIONS = [
   { id: 8, top: "50%", left: "69%", defaultRotation: 300 },
 ];
 
-// Komponenta pro kolečko s výsečí
+// Komponenta pro kolečko s výsečí - bez transition na mobilu
 function Marker({ rotation = 0, top, left, isActive, onClick }) {
   return (
     <div className="marker-wrapper" style={{ top, left }}>
@@ -66,6 +66,10 @@ function App() {
   const prevAngle = useRef(0);
   const cumulativeRotation = useRef(POSITIONS[0].defaultRotation);
 
+  // Reference na viewer pro zachování pozice
+  const viewerRef = useRef(null);
+  const currentYaw = useRef(0);
+
   // Přednačtení obrázků pro aktivní marker
   useEffect(() => {
     const urls = getPhotoUrls(activeMarker);
@@ -82,6 +86,7 @@ function App() {
   // Funkce volaná při otáčení - lng je horizontální úhel (yaw)
   const handlePositionChange = (lat, lng) => {
     const degrees = lng * (180 / Math.PI);
+    currentYaw.current = lng; // Uložíme aktuální yaw v radiánech
 
     let delta = degrees - prevAngle.current;
 
@@ -100,7 +105,17 @@ function App() {
     const position = POSITIONS.find((p) => p.id === id);
     cumulativeRotation.current = position.defaultRotation;
     prevAngle.current = 0;
+    currentYaw.current = 0;
     setRotation(position.defaultRotation);
+  };
+
+  // Callback když se viewer načte
+  const handleReady = (instance) => {
+    viewerRef.current = instance;
+    // Nastav pozici na uloženou hodnotu
+    if (currentYaw.current !== 0) {
+      instance.rotate({ yaw: currentYaw.current, pitch: 0 });
+    }
   };
 
   return (
@@ -109,13 +124,14 @@ function App() {
         {/* Horní část - 3D sphere viewer */}
         <div className="div-top">
           <ReactPhotoSphereViewer
-            key={displayImage}
+            key={`${activeMarker}-${displayImage}`}
             src={displayImage}
             height={"100%"}
             width={"100%"}
             containerClass="viewer-container"
             onPositionChange={handlePositionChange}
-            defaultYaw={0}
+            onReady={handleReady}
+            defaultYaw={currentYaw.current}
             navbar={false}
           />
           {/* Skryté přednačtené obrázky */}

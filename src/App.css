@@ -283,4 +283,9 @@ body {
     flex-shrink: 0;
     overflow: hidden;
   }
+
+  /* Vypnutí transition na mobilu pro plynulejší animaci */
+  .marker-inner {
+    transition: none;
+  }
 }
