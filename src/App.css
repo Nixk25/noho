@@ -259,11 +259,11 @@ body {
   left: 15%;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 425px) {
   .page-wrapper {
     padding: 0;
     gap: 0;
-    width: 100%;
+    width: 320px;
   }
 
   .card {

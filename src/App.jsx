@@ -10,9 +10,9 @@ const getPhotoUrls = (id) => ({
   xray: `${BASE_URL}/x0${id}_final.jpg`,
 });
 
-// Konfigurace 8 pozic kolečel na ground view
+// Konfigurace 8 pozic kolečel na ground view - DESKTOP (400px card)
 // top/left jsou v procentech, defaultRotation je výchozí úhel výseče
-const POSITIONS = [
+const POSITIONS_DESKTOP = [
   { id: 1, top: "33%", left: "-4%", defaultRotation: 120 },
   { id: 2, top: "38%", left: "0%", defaultRotation: 110 },
   { id: 3, top: "26%", left: "3%", defaultRotation: 130 },
@@ -22,6 +22,37 @@ const POSITIONS = [
   { id: 7, top: "38%", left: "52%", defaultRotation: 120 },
   { id: 8, top: "50%", left: "69%", defaultRotation: 300 },
 ];
+
+// Konfigurace 8 pozic kolečel na ground view - MOBIL (320-425px)
+// Uprav tyto hodnoty podle toho, jak se cropuje obrázek na mobilu
+const POSITIONS_MOBILE = [
+  { id: 1, top: "30%", left: "-11%", defaultRotation: 120 },
+  { id: 2, top: "35%", left: "-6%", defaultRotation: 110 },
+  { id: 3, top: "23%", left: "-3%", defaultRotation: 130 },
+  { id: 4, top: "21%", left: "3%", defaultRotation: 80 },
+  { id: 5, top: "-14%", left: "15%", defaultRotation: 170 },
+  { id: 6, top: "-16%", left: "48%", defaultRotation: 200 },
+  { id: 7, top: "36%", left: "50%", defaultRotation: 120 },
+  { id: 8, top: "48%", left: "68%", defaultRotation: 300 },
+];
+
+// Hook pro detekci mobilu
+function useIsMobile(breakpoint = 425) {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= breakpoint : false,
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= breakpoint);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [breakpoint]);
+
+  return isMobile;
+}
 
 // Komponenta pro kolečko s výsečí - bez transition na mobilu
 function Marker({ rotation = 0, top, left, isActive, onClick }) {
@@ -58,9 +89,14 @@ function Marker({ rotation = 0, top, left, isActive, onClick }) {
 }
 
 function App() {
+  const isMobile = useIsMobile(425);
+  const POSITIONS = isMobile ? POSITIONS_MOBILE : POSITIONS_DESKTOP;
+
   const [xrayMode, setXrayMode] = useState(false);
   const [activeMarker, setActiveMarker] = useState(1);
-  const [rotation, setRotation] = useState(POSITIONS[0].defaultRotation);
+  const [rotation, setRotation] = useState(
+    POSITIONS_DESKTOP[0].defaultRotation,
+  );
 
   // Sledujeme předchozí úhel a kumulativní rotaci
   const prevAngle = useRef(0);
