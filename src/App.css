@@ -1,0 +1,263 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #1a1a2e;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.card {
+  width: 400px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+}
+
+.labels-overlay {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Horní část - 3D fotka */
+.div-top {
+  height: 500px;
+  padding: 0;
+  position: relative;
+  background: #000;
+}
+
+/* Skryté přednačtené obrázky */
+.preload-image {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Spodní část - groundView */
+.div-bottom {
+  position: relative;
+  background-image: url("https://noho.b-cdn.net/vizualizace%20fotky/groundView_final.jpg");
+  background-size: cover;
+  background-position: center;
+  min-height: 250px;
+}
+
+.view-mode-label {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  background: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #042951;
+  font-weight: 500;
+}
+
+.psv-navbar {
+  display: none;
+}
+
+/* Checkbox label wrapper */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  cursor: pointer;
+  font-size: 14px;
+  gap: 10px;
+  font-weight: 500;
+  background: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  color: #042951;
+  text-transform: uppercase;
+}
+
+.checkbox-label input {
+  display: none;
+}
+
+/* Toggle switch */
+.checkbox-toggle {
+  width: 40px;
+  height: 22px;
+  background: #858585;
+  border-radius: 11px;
+  position: relative;
+  transition: background 0.3s;
+}
+
+.checkbox-toggle::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: #cedc00;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+
+/* Active state */
+.checkbox-label input:checked + .checkbox-toggle {
+  background: #042951;
+}
+
+.checkbox-label input:checked + .checkbox-toggle::after {
+  transform: translateX(18px);
+}
+
+/* Eye icon */
+.eye-icon {
+  width: 20px;
+  height: 20px;
+  color: #042951;
+  opacity: 0.8;
+}
+
+/* Bottom section */
+.bottom-label {
+  color: white;
+  font-size: 14px;
+  padding: 12px 8px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background: #cedc00;
+  color: #042951;
+}
+
+/* Marker wrapper - drží pozici, neklikací */
+.marker-wrapper {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  pointer-events: none;
+}
+
+/* Vnitřní kontejner co se otáčí */
+.marker-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease;
+}
+
+/* Kolečko - jediná klikací část */
+.marker-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid #042951;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  transition: all 0.2s;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.marker-dot-active {
+  border-color: #cedc00;
+  background: rgba(206, 220, 0, 0.3);
+}
+
+.marker-dot:hover {
+  border-color: #cedc00;
+}
+
+/* Výseč - neklikací, průhledná pro kliky */
+.marker-arc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-59%, -100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Pozice 8 markerů na ground view */
+.marker-1 {
+  top: 20%;
+  left: 15%;
+}
+
+.marker-2 {
+  top: 15%;
+  left: 35%;
+}
+
+.marker-3 {
+  top: 20%;
+  left: 55%;
+}
+
+.marker-4 {
+  top: 25%;
+  left: 75%;
+}
+
+.marker-5 {
+  top: 50%;
+  left: 80%;
+}
+
+.marker-6 {
+  top: 65%;
+  left: 60%;
+}
+
+.marker-7 {
+  top: 60%;
+  left: 35%;
+}
+
+.marker-8 {
+  top: 45%;
+  left: 15%;
+}
