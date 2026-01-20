@@ -173,8 +173,8 @@ body {
 /* Marker wrapper - drží pozici, uvnitř se vše otáčí */
 .marker-wrapper {
   position: absolute;
-  width: 100px;
-  height: 100px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
 }
 
@@ -197,7 +197,7 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 2;
+  z-index: 999;
   transition: all 0.2s;
 }
 
@@ -216,6 +216,8 @@ body {
   left: 50%;
   transform: translate(-59%, -100%);
   z-index: 1;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* Pozice 8 markerů na ground view */
@@ -287,5 +289,10 @@ body {
   /* Vypnutí transition na mobilu pro plynulejší animaci */
   .marker-inner {
     transition: none;
+  }
+
+  .marker-dot {
+    width: 26px;
+    height: 26px;
   }
 }
