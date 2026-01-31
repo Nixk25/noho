@@ -10,31 +10,186 @@ const getPhotoUrls = (id) => ({
   xray: `${BASE_URL}/x0${id}_final.jpg`,
 });
 
-// Konfigurace 8 pozic kolečel na ground view - DESKTOP (400px card)
-// top/left jsou v procentech, defaultRotation je výchozí úhel výseče
-const POSITIONS_DESKTOP = [
-  { id: 1, top: "49%", left: "6%", defaultRotation: 120 },
-  { id: 2, top: "53%", left: "10%", defaultRotation: 110 },
-  { id: 3, top: "42%", left: "13%", defaultRotation: 130 },
-  { id: 4, top: "40%", left: "19%", defaultRotation: 80 },
-  { id: 5, top: "5%", left: "30%", defaultRotation: 170 },
-  { id: 6, top: "3%", left: "61%", defaultRotation: 200 },
-  { id: 7, top: "54%", left: "62%", defaultRotation: 120 },
-  { id: 8, top: "67%", left: "71%", defaultRotation: 300 },
-];
+// Konfigurace pozic kolečel - seskupené podle počtu větrníků
+const MARKER_CONFIGS = {
+  3: {
+    desktop: [
+      {
+        id: 1,
+        top: "49%",
+        left: "6%",
+        defaultRotation: 120,
+        name: "Náměstí svobody",
+      },
+      {
+        id: 2,
+        top: "5%",
+        left: "30%",
+        defaultRotation: 170,
+        name: "U kostela",
+      },
+      {
+        id: 3,
+        top: "67%",
+        left: "71%",
+        defaultRotation: 300,
+        name: "Za rybníkem",
+      },
+    ],
+    mobile: [
+      {
+        id: 1,
+        top: "46%",
+        left: "2%",
+        defaultRotation: 120,
+        name: "Náměstí svobody",
+      },
+      {
+        id: 2,
+        top: "2%",
+        left: "28%",
+        defaultRotation: 170,
+        name: "U kostela",
+      },
+      {
+        id: 3,
+        top: "64%",
+        left: "80%",
+        defaultRotation: 300,
+        name: "Za rybníkem",
+      },
+    ],
+  },
+  4: {
+    desktop: [
+      {
+        id: 1,
+        top: "49%",
+        left: "6%",
+        defaultRotation: 120,
+        name: "Náměstí svobody",
+      },
+      {
+        id: 2,
+        top: "42%",
+        left: "13%",
+        defaultRotation: 130,
+        name: "Hlavní ulice",
+      },
+      {
+        id: 3,
+        top: "5%",
+        left: "30%",
+        defaultRotation: 170,
+        name: "U kostela",
+      },
+      {
+        id: 4,
+        top: "67%",
+        left: "71%",
+        defaultRotation: 300,
+        name: "Za rybníkem",
+      },
+    ],
+    mobile: [
+      {
+        id: 1,
+        top: "46%",
+        left: "2%",
+        defaultRotation: 120,
+        name: "Náměstí svobody",
+      },
+      {
+        id: 2,
+        top: "40%",
+        left: "9%",
+        defaultRotation: 130,
+        name: "Hlavní ulice",
+      },
+      {
+        id: 3,
+        top: "2%",
+        left: "28%",
+        defaultRotation: 170,
+        name: "U kostela",
+      },
+      {
+        id: 4,
+        top: "64%",
+        left: "80%",
+        defaultRotation: 300,
+        name: "Za rybníkem",
+      },
+    ],
+  },
+  5: {
+    desktop: [
+      {
+        id: 1,
+        top: "49%",
+        left: "6%",
+        defaultRotation: 120,
+        name: "Náměstí svobody",
+      },
+      {
+        id: 2,
+        top: "42%",
+        left: "13%",
+        defaultRotation: 130,
+        name: "Hlavní ulice",
+      },
+      { id: 3, top: "40%", left: "19%", defaultRotation: 80, name: "U školy" },
+      {
+        id: 4,
+        top: "5%",
+        left: "30%",
+        defaultRotation: 170,
+        name: "U kostela",
+      },
+      {
+        id: 5,
+        top: "67%",
+        left: "71%",
+        defaultRotation: 300,
+        name: "Za rybníkem",
+      },
+    ],
+    mobile: [
+      {
+        id: 1,
+        top: "46%",
+        left: "2%",
+        defaultRotation: 120,
+        name: "Náměstí svobody",
+      },
+      {
+        id: 2,
+        top: "40%",
+        left: "9%",
+        defaultRotation: 130,
+        name: "Hlavní ulice",
+      },
+      { id: 3, top: "38%", left: "16%", defaultRotation: 80, name: "U školy" },
+      {
+        id: 4,
+        top: "2%",
+        left: "28%",
+        defaultRotation: 170,
+        name: "U kostela",
+      },
+      {
+        id: 5,
+        top: "64%",
+        left: "80%",
+        defaultRotation: 300,
+        name: "Za rybníkem",
+      },
+    ],
+  },
+};
 
-// Konfigurace 8 pozic kolečel na ground view - MOBIL (320-425px)
-// Uprav tyto hodnoty podle toho, jak se cropuje obrázek na mobilu
-const POSITIONS_MOBILE = [
-  { id: 1, top: "46%", left: "2%", defaultRotation: 120 },
-  { id: 2, top: "52%", left: "9%", defaultRotation: 110 },
-  { id: 3, top: "40%", left: "9%", defaultRotation: 130 },
-  { id: 4, top: "38%", left: "16%", defaultRotation: 80 },
-  { id: 5, top: "2%", left: "28%", defaultRotation: 170 },
-  { id: 6, top: "2%", left: "61%", defaultRotation: 200 },
-  { id: 7, top: "51%", left: "65%", defaultRotation: 120 },
-  { id: 8, top: "64%", left: "80%", defaultRotation: 300 },
-];
+// Dostupné počty větrníků
+const WINDMILL_COUNTS = [3, 4, 5];
 
 // Hook pro detekci mobilu
 function useIsMobile(breakpoint = 425) {
@@ -55,7 +210,7 @@ function useIsMobile(breakpoint = 425) {
 }
 
 // Komponenta pro kolečko s výsečí - bez transition na mobilu
-function Marker({ rotation = 0, top, left, isActive, onClick }) {
+function Marker({ id, rotation = 0, top, left, isActive, onClick }) {
   return (
     <div className="marker-wrapper" style={{ top, left }}>
       <div
@@ -65,7 +220,14 @@ function Marker({ rotation = 0, top, left, isActive, onClick }) {
         <div
           className={`marker-dot ${isActive ? "marker-dot-active" : ""}`}
           onClick={onClick}
-        />
+        >
+          <span
+            className="marker-number"
+            style={{ transform: `rotate(${-rotation}deg)` }}
+          >
+            {id}
+          </span>
+        </div>
         {isActive && (
           <svg
             className="marker-arc"
@@ -90,13 +252,19 @@ function Marker({ rotation = 0, top, left, isActive, onClick }) {
 
 function App() {
   const isMobile = useIsMobile(425);
-  const POSITIONS = isMobile ? POSITIONS_MOBILE : POSITIONS_DESKTOP;
+
+  const [windmillCount, setWindmillCount] = useState(3);
+  const POSITIONS = isMobile
+    ? MARKER_CONFIGS[windmillCount].mobile
+    : MARKER_CONFIGS[windmillCount].desktop;
 
   const [xrayMode, setXrayMode] = useState(false);
   const [activeMarker, setActiveMarker] = useState(1);
-  const [rotation, setRotation] = useState(
-    POSITIONS_DESKTOP[0].defaultRotation,
-  );
+  const [rotation, setRotation] = useState(POSITIONS[0].defaultRotation);
+
+  // Získání aktuálního markeru pro zobrazení názvu
+  const currentMarker =
+    POSITIONS.find((p) => p.id === activeMarker) || POSITIONS[0];
 
   // Sledujeme předchozí úhel a kumulativní rotaci
   const prevAngle = useRef(0);
@@ -105,6 +273,7 @@ function App() {
   // Reference na viewer pro zachování pozice
   const viewerRef = useRef(null);
   const currentYaw = useRef(0);
+  const hasShownHint = useRef(false);
 
   // Přednačtení obrázků pro aktivní marker
   useEffect(() => {
@@ -145,6 +314,28 @@ function App() {
     setRotation(position.defaultRotation);
   };
 
+  // Plynulá rotace při držení šipky
+  const rotationInterval = useRef(null);
+
+  const startRotation = (direction) => {
+    if (rotationInterval.current) return;
+    const rotateStep = () => {
+      if (!viewerRef.current) return;
+      const pos = viewerRef.current.getPosition();
+      const step = direction === "left" ? -0.015 : 0.015;
+      viewerRef.current.rotate({ yaw: pos.yaw + step, pitch: pos.pitch });
+    };
+    rotateStep();
+    rotationInterval.current = setInterval(rotateStep, 16);
+  };
+
+  const stopRotation = () => {
+    if (rotationInterval.current) {
+      clearInterval(rotationInterval.current);
+      rotationInterval.current = null;
+    }
+  };
+
   // Callback když se viewer načte
   const handleReady = (instance) => {
     viewerRef.current = instance;
@@ -152,11 +343,61 @@ function App() {
     if (currentYaw.current !== 0) {
       instance.rotate({ yaw: currentYaw.current, pitch: 0 });
     }
+
+    // Rychlý náznak rotace na obě strany - jen při prvním načtení
+    if (!hasShownHint.current) {
+      hasShownHint.current = true;
+      setTimeout(() => {
+        const startYaw = instance.getPosition().yaw;
+        instance
+          .animate({
+            yaw: startYaw - Math.PI / 20,
+            pitch: 0,
+            speed: "4rpm",
+          })
+          .then(() => {
+            return instance.animate({
+              yaw: startYaw + Math.PI / 20,
+              pitch: 0,
+              speed: "4rpm",
+            });
+          })
+          .then(() => {
+            instance.animate({
+              yaw: startYaw,
+              pitch: 0,
+              speed: "4rpm",
+            });
+          });
+      }, 300);
+    }
   };
 
   return (
     <div className="page-wrapper">
       <div className="card">
+        <div className="windmill-switcher">
+          {WINDMILL_COUNTS.map((count) => (
+            <button
+              key={count}
+              className={`windmill-btn ${windmillCount === count ? "windmill-btn-active" : ""}`}
+              onClick={() => {
+                setWindmillCount(count);
+                setActiveMarker(1);
+                const newPositions = isMobile
+                  ? MARKER_CONFIGS[count].mobile
+                  : MARKER_CONFIGS[count].desktop;
+                setRotation(newPositions[0].defaultRotation);
+                cumulativeRotation.current = newPositions[0].defaultRotation;
+                prevAngle.current = 0;
+                currentYaw.current = 0;
+              }}
+            >
+              <span>{count}</span>
+              <img src="/vetrnik.webp" alt="" className="windmill-icon" />
+            </button>
+          ))}
+        </div>
         {/* Horní část - 3D sphere viewer */}
         <div className="div-top">
           <ReactPhotoSphereViewer
@@ -170,6 +411,43 @@ function App() {
             defaultYaw={currentYaw.current}
             navbar={false}
           />
+
+          {/* Navigační šipky */}
+          <button
+            className="nav-arrow nav-arrow-left"
+            onMouseDown={() => startRotation("left")}
+            onMouseUp={stopRotation}
+            onMouseLeave={stopRotation}
+            onTouchStart={() => startRotation("left")}
+            onTouchEnd={stopRotation}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <button
+            className="nav-arrow nav-arrow-right"
+            onMouseDown={() => startRotation("right")}
+            onMouseUp={stopRotation}
+            onMouseLeave={stopRotation}
+            onTouchStart={() => startRotation("right")}
+            onTouchEnd={stopRotation}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+
           {/* Skryté přednačtené obrázky */}
           <img src={currentUrls.normal} alt="" className="preload-image" />
           <img src={currentUrls.xray} alt="" className="preload-image" />
@@ -186,28 +464,15 @@ function App() {
             </label>
           </div>
 
-          <div className="view-mode-label">
-            <span>360°</span>
-            <svg
-              className="eye-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-          </div>
-
-          <span className="bottom-label">Pohled z centra obce</span>
+          <span className="bottom-label">{currentMarker.name}</span>
         </div>
 
-        {/* Spodní část - ground view s 8 kolečky */}
+        {/* Spodní část - ground view s kolečky */}
         <div className="div-bottom">
-          {POSITIONS.map((pos) => (
+          {POSITIONS.map((pos, index) => (
             <Marker
               key={pos.id}
+              id={index + 1}
               rotation={
                 activeMarker === pos.id ? rotation : pos.defaultRotation
               }

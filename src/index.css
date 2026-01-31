@@ -1,6 +1,23 @@
+@font-face {
+  font-family: "StyreneA"; /* Takhle se bude font jmenovat v kódu */
+  src: url("/fonts/StyreneA-Regular.woff2") format("woff2"); /* Cesta do public */
+  font-weight: 400; /* Regular */
+  font-style: normal;
+  font-display: swap; /* Důležité pro rychlost načítání */
+}
+
+@font-face {
+  font-family: "StyreneA";
+  src: url("/fonts/StyreneA-Bold.woff2") format("woff2");
+  font-weight: 700; /* Bold */
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
   margin: 0;
   display: flex;
   place-items: center;
   min-height: 100vh;
+  font-family: "StyreneA", sans-serif;
 }
