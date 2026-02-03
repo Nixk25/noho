@@ -6,186 +6,162 @@ const BASE_URL = "https://noho.b-cdn.net/vizualizace%20fotky";
 
 // Generování URL pro fotky
 const getPhotoUrls = (id) => ({
-  normal: `${BASE_URL}/x0${id}_S_final.jpg`,
-  xray: `${BASE_URL}/x0${id}_final.jpg`,
+  normal: `${BASE_URL}/x0${id}_krakov.webp`,
+  xray: `${BASE_URL}/x0${id}_krakov_S.webp`,
 });
+// ============ STARÁ VERZE - ZAKOMENTOVÁNO ============
+// const MARKER_CONFIGS = {
+//   3: {
+//     desktop: [
+//       { id: 1, top: "49%", left: "6%", defaultRotation: 120, name: "1. Pohled z vesnice Náměstí" },
+//       { id: 2, top: "5%", left: "30%", defaultRotation: 170, name: "2. Pohled z vesnice Kostel" },
+//       { id: 3, top: "67%", left: "71%", defaultRotation: 300, name: "3. Pohled z vesnice Rybník" },
+//     ],
+//     mobile: [
+//       { id: 1, top: "46%", left: "2%", defaultRotation: 120, name: "1. Pohled z vesnice Náměstí" },
+//       { id: 2, top: "2%", left: "28%", defaultRotation: 170, name: "2. Pohled z vesnice Kostel" },
+//       { id: 3, top: "64%", left: "80%", defaultRotation: 300, name: "3. Pohled z vesnice Rybník" },
+//     ],
+//   },
+//   4: {
+//     desktop: [
+//       { id: 1, top: "49%", left: "6%", defaultRotation: 120, name: "1. Pohled z vesnice Náměstí" },
+//       { id: 2, top: "42%", left: "13%", defaultRotation: 130, name: "2. Pohled z vesnice Ulice" },
+//       { id: 3, top: "5%", left: "30%", defaultRotation: 170, name: "3. Pohled z vesnice Kostel" },
+//       { id: 4, top: "67%", left: "71%", defaultRotation: 300, name: "4. Pohled z vesnice Rybník" },
+//     ],
+//     mobile: [
+//       { id: 1, top: "46%", left: "2%", defaultRotation: 120, name: "1. Pohled z vesnice Náměstí" },
+//       { id: 2, top: "40%", left: "9%", defaultRotation: 130, name: "2. Pohled z vesnice Ulice" },
+//       { id: 3, top: "2%", left: "28%", defaultRotation: 170, name: "3. Pohled z vesnice Kostel" },
+//       { id: 4, top: "64%", left: "80%", defaultRotation: 300, name: "4. Pohled z vesnice Rybník" },
+//     ],
+//   },
+//   5: {
+//     desktop: [
+//       { id: 1, top: "49%", left: "6%", defaultRotation: 120, name: "1. Pohled z vesnice Náměstí" },
+//       { id: 2, top: "42%", left: "13%", defaultRotation: 130, name: "2. Pohled z vesnice Ulice" },
+//       { id: 3, top: "40%", left: "19%", defaultRotation: 80, name: "3. Pohled z vesnice Škola" },
+//       { id: 4, top: "5%", left: "30%", defaultRotation: 170, name: "4. Pohled z vesnice Kostel" },
+//       { id: 5, top: "67%", left: "71%", defaultRotation: 300, name: "5. Pohled z vesnice Rybník" },
+//     ],
+//     mobile: [
+//       { id: 1, top: "46%", left: "2%", defaultRotation: 120, name: "1. Pohled z vesnice Náměstí" },
+//       { id: 2, top: "40%", left: "9%", defaultRotation: 130, name: "2. Pohled z vesnice Ulice" },
+//       { id: 3, top: "38%", left: "16%", defaultRotation: 80, name: "3. Pohled z vesnice Škola" },
+//       { id: 4, top: "2%", left: "28%", defaultRotation: 170, name: "4. Pohled z vesnice Kostel" },
+//       { id: 5, top: "64%", left: "80%", defaultRotation: 300, name: "5. Pohled z vesnice Rybník" },
+//     ],
+//   },
+// };
 
-// Konfigurace pozic kolečel - seskupené podle počtu větrníků
-const MARKER_CONFIGS = {
-  3: {
-    desktop: [
-      {
-        id: 1,
-        top: "49%",
-        left: "6%",
-        defaultRotation: 120,
-        name: "Náměstí svobody",
-      },
-      {
-        id: 2,
-        top: "5%",
-        left: "30%",
-        defaultRotation: 170,
-        name: "U kostela",
-      },
-      {
-        id: 3,
-        top: "67%",
-        left: "71%",
-        defaultRotation: 300,
-        name: "Za rybníkem",
-      },
-    ],
-    mobile: [
-      {
-        id: 1,
-        top: "46%",
-        left: "2%",
-        defaultRotation: 120,
-        name: "Náměstí svobody",
-      },
-      {
-        id: 2,
-        top: "2%",
-        left: "28%",
-        defaultRotation: 170,
-        name: "U kostela",
-      },
-      {
-        id: 3,
-        top: "64%",
-        left: "80%",
-        defaultRotation: 300,
-        name: "Za rybníkem",
-      },
-    ],
+// ============ NOVÁ VERZE - 3 LOKALITY S PANORAMA ============
+// Pozice větrníků na mapě - PEVNĚ 3 větrníky
+const WINDMILL_POSITIONS = {
+  desktop: [
+    { id: 1, top: "34%", left: "18%" },
+    { id: 2, top: "30%", left: "40%" },
+    { id: 3, top: "28%", left: "75%" },
+  ],
+  mobile: [
+    { id: 1, top: "33%", left: "21%" },
+    { id: 2, top: "27%", left: "41%" },
+    { id: 3, top: "23%", left: "73%" },
+  ],
+};
+
+// Base markery - desktop pozice
+const BASE_MARKERS_DESKTOP = [
+  {
+    id: 1,
+    top: "61%",
+    left: "35%",
+    defaultRotation: -50,
+    name: "1. Pohled z vesnice Lokalita A",
   },
-  4: {
-    desktop: [
-      {
-        id: 1,
-        top: "49%",
-        left: "6%",
-        defaultRotation: 120,
-        name: "Náměstí svobody",
-      },
-      {
-        id: 2,
-        top: "42%",
-        left: "13%",
-        defaultRotation: 130,
-        name: "Hlavní ulice",
-      },
-      {
-        id: 3,
-        top: "5%",
-        left: "30%",
-        defaultRotation: 170,
-        name: "U kostela",
-      },
-      {
-        id: 4,
-        top: "67%",
-        left: "71%",
-        defaultRotation: 300,
-        name: "Za rybníkem",
-      },
-    ],
-    mobile: [
-      {
-        id: 1,
-        top: "46%",
-        left: "2%",
-        defaultRotation: 120,
-        name: "Náměstí svobody",
-      },
-      {
-        id: 2,
-        top: "40%",
-        left: "9%",
-        defaultRotation: 130,
-        name: "Hlavní ulice",
-      },
-      {
-        id: 3,
-        top: "2%",
-        left: "28%",
-        defaultRotation: 170,
-        name: "U kostela",
-      },
-      {
-        id: 4,
-        top: "64%",
-        left: "80%",
-        defaultRotation: 300,
-        name: "Za rybníkem",
-      },
-    ],
+  {
+    id: 2,
+    top: "49%",
+    left: "65%",
+    defaultRotation: -40,
+    name: "2. Pohled z vesnice Lokalita B",
   },
-  5: {
-    desktop: [
-      {
-        id: 1,
-        top: "49%",
-        left: "6%",
-        defaultRotation: 120,
-        name: "Náměstí svobody",
-      },
-      {
-        id: 2,
-        top: "42%",
-        left: "13%",
-        defaultRotation: 130,
-        name: "Hlavní ulice",
-      },
-      { id: 3, top: "40%", left: "19%", defaultRotation: 80, name: "U školy" },
-      {
-        id: 4,
-        top: "5%",
-        left: "30%",
-        defaultRotation: 170,
-        name: "U kostela",
-      },
-      {
-        id: 5,
-        top: "67%",
-        left: "71%",
-        defaultRotation: 300,
-        name: "Za rybníkem",
-      },
-    ],
-    mobile: [
-      {
-        id: 1,
-        top: "46%",
-        left: "2%",
-        defaultRotation: 120,
-        name: "Náměstí svobody",
-      },
-      {
-        id: 2,
-        top: "40%",
-        left: "9%",
-        defaultRotation: 130,
-        name: "Hlavní ulice",
-      },
-      { id: 3, top: "38%", left: "16%", defaultRotation: 80, name: "U školy" },
-      {
-        id: 4,
-        top: "2%",
-        left: "28%",
-        defaultRotation: 170,
-        name: "U kostela",
-      },
-      {
-        id: 5,
-        top: "64%",
-        left: "80%",
-        defaultRotation: 300,
-        name: "Za rybníkem",
-      },
-    ],
+  {
+    id: 3,
+    top: "47%",
+    left: "70%",
+    defaultRotation: -40,
+    name: "3. Pohled z vesnice Lokalita C",
   },
+  {
+    id: 4,
+    top: "40%",
+    left: "85%",
+    defaultRotation: 0,
+    name: "4. Pohled z vesnice Lokalita D",
+  },
+];
+
+// Base markery - mobile pozice
+const BASE_MARKERS_MOBILE = [
+  {
+    id: 1,
+    top: "65%",
+    left: "37%",
+    defaultRotation: -50,
+    name: "1. Pohled z vesnice Lokalita A",
+  },
+  {
+    id: 2,
+    top: "46%",
+    left: "62%",
+    defaultRotation: -40,
+    name: "2. Pohled z vesnice Lokalita B",
+  },
+  {
+    id: 3,
+    top: "45%",
+    left: "67%",
+    defaultRotation: -40,
+    name: "3. Pohled z vesnice Lokalita C",
+  },
+  {
+    id: 4,
+    top: "40%",
+    left: "90%",
+    defaultRotation: 0,
+    name: "4. Pohled z vesnice Lokalita D",
+  },
+];
+
+// Přídavný pátý marker
+const ADDITIONAL_MARKER_DESKTOP = {
+  id: 5,
+  top: "70%",
+  left: "40%",
+  defaultRotation: 0,
+  name: "5. Pohled z vesnice Lokalita E",
+};
+
+const ADDITIONAL_MARKER_MOBILE = {
+  id: 5,
+  top: "70%",
+  left: "35%",
+  defaultRotation: 0,
+  name: "5. Pohled z vesnice Lokalita E",
+};
+
+// Funkce pro získání markerů podle počtu
+const getMarkers = (count, isMobile) => {
+  const base = isMobile ? BASE_MARKERS_MOBILE : BASE_MARKERS_DESKTOP;
+  const additional = isMobile
+    ? ADDITIONAL_MARKER_MOBILE
+    : ADDITIONAL_MARKER_DESKTOP;
+
+  if (count === 3) return base.slice(0, 3);
+  if (count === 4) return base;
+  if (count === 5) return [...base, additional];
+  return base;
 };
 
 // Dostupné počty větrníků
@@ -254,9 +230,11 @@ function App() {
   const isMobile = useIsMobile(425);
 
   const [windmillCount, setWindmillCount] = useState(3);
-  const POSITIONS = isMobile
-    ? MARKER_CONFIGS[windmillCount].mobile
-    : MARKER_CONFIGS[windmillCount].desktop;
+  const POSITIONS = getMarkers(windmillCount, isMobile);
+
+  const WINDMILLS = isMobile
+    ? WINDMILL_POSITIONS.mobile
+    : WINDMILL_POSITIONS.desktop;
 
   const [xrayMode, setXrayMode] = useState(false);
   const [activeMarker, setActiveMarker] = useState(1);
@@ -384,9 +362,7 @@ function App() {
               onClick={() => {
                 setWindmillCount(count);
                 setActiveMarker(1);
-                const newPositions = isMobile
-                  ? MARKER_CONFIGS[count].mobile
-                  : MARKER_CONFIGS[count].desktop;
+                const newPositions = getMarkers(count, isMobile);
                 setRotation(newPositions[0].defaultRotation);
                 cumulativeRotation.current = newPositions[0].defaultRotation;
                 prevAngle.current = 0;
@@ -408,7 +384,6 @@ function App() {
             containerClass="viewer-container"
             onPositionChange={handlePositionChange}
             onReady={handleReady}
-            defaultYaw={currentYaw.current}
             navbar={false}
           />
 
@@ -418,8 +393,14 @@ function App() {
             onMouseDown={() => startRotation("left")}
             onMouseUp={stopRotation}
             onMouseLeave={stopRotation}
-            onTouchStart={() => startRotation("left")}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              startRotation("left");
+            }}
+            onTouchMove={(e) => e.preventDefault()}
             onTouchEnd={stopRotation}
+            onTouchCancel={stopRotation}
+            onContextMenu={(e) => e.preventDefault()}
           >
             <svg
               viewBox="0 0 24 24"
@@ -435,8 +416,14 @@ function App() {
             onMouseDown={() => startRotation("right")}
             onMouseUp={stopRotation}
             onMouseLeave={stopRotation}
-            onTouchStart={() => startRotation("right")}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              startRotation("right");
+            }}
+            onTouchMove={(e) => e.preventDefault()}
             onTouchEnd={stopRotation}
+            onTouchCancel={stopRotation}
+            onContextMenu={(e) => e.preventDefault()}
           >
             <svg
               viewBox="0 0 24 24"
@@ -469,6 +456,21 @@ function App() {
 
         {/* Spodní část - ground view s kolečky */}
         <div className="div-bottom">
+          {/* Ikony větrníků na mapě - PEVNĚ 3 větrníky */}
+          {WINDMILLS.map((windmill) => (
+            <img
+              key={`windmill-${windmill.id}`}
+              src="/vetrnik.webp"
+              alt=""
+              className="windmill-map-icon"
+              style={{
+                top: windmill.top,
+                left: windmill.left,
+              }}
+            />
+          ))}
+
+          {/* Kolečka s čísly */}
           {POSITIONS.map((pos, index) => (
             <Marker
               key={pos.id}

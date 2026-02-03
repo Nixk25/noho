@@ -25,11 +25,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .card {
-  width: 400px;
+  width: 500px;
+  height: 100vh;
+  max-height: 100vh;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
@@ -49,10 +53,14 @@ body {
 
 /* Horní část - 3D fotka */
 .div-top {
-  height: 500px;
+  height: 60vh;
   padding: 0;
   position: relative;
   background: #000;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Skryté přednačtené obrázky */
@@ -67,10 +75,12 @@ body {
 /* Spodní část - groundView */
 .div-bottom {
   position: relative;
-  background-image: url("https://noho.b-cdn.net/vizualizace%20fotky/groundView_final.jpg");
+  background-image: url("https://noho.b-cdn.net/vizualizace%20fotky/groundView_krakov.webp");
   background-size: cover;
   background-position: center;
-  min-height: 250px;
+  height: 30vh;
+  min-height: 0;
+  flex-shrink: 0;
 }
 
 .psv-navbar {
@@ -160,6 +170,11 @@ body {
   justify-content: center;
   transition: all 0.2s ease;
   color: #042951;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .nav-arrow:hover {
@@ -194,6 +209,17 @@ body {
   align-items: center;
 }
 
+/* Windmill icons on map */
+.windmill-map-icon {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
 /* Marker wrapper - drží pozici, uvnitř se vše otáčí */
 .marker-wrapper {
   position: absolute;
@@ -207,7 +233,7 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 0.3s ease;
+  transition: none;
 }
 
 .marker-dot {
@@ -302,8 +328,9 @@ body {
   display: flex;
   justify-content: center;
   gap: 8px;
-  padding-top: 12px;
+  padding-top: 25px;
   background: #f5f5f5;
+  flex: 0 0 auto;
 }
 
 .windmill-btn {
@@ -334,10 +361,16 @@ body {
 }
 
 @media (max-width: 425px) {
+  body {
+    overflow: hidden;
+  }
+
   .page-wrapper {
     padding: 0;
     gap: 0;
-    width: 320px;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
   }
 
   .card {
@@ -347,15 +380,21 @@ body {
   }
 
   .div-top {
-    height: 70dvh;
+    height: calc(70dvh - 25px);
     flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   .div-bottom {
-    height: 30dvh;
+    height: calc(30dvh - 15px);
     min-height: 0;
     flex-shrink: 0;
     overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   /* Vypnutí transition na mobilu pro plynulejší animaci */
@@ -391,17 +430,23 @@ body {
   }
 
   .windmill-switcher {
-    padding: 8px;
+    padding-bottom: 0px;
+    padding-top: 10px;
     gap: 6px;
   }
 
   .windmill-btn {
-    padding: 6px 12px;
-    font-size: 12px;
+    padding: 12px 24px;
+    font-size: 20px;
   }
 
   .windmill-icon {
     width: 16px;
     height: 16px;
+  }
+
+  .windmill-map-icon {
+    width: 30px;
+    height: 30px;
   }
 }
