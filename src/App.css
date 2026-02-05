@@ -1,21 +1,16 @@
-* {
+html,
+body {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow-x: clip;
-  background: #efeae2;
+  width: 100%;
+  height: 100%; /* Důležité: roztáhne se podle iframu */
+  overflow: hidden; /* Důležité: Zamezí scrollbarům uvnitř iframu */
+  background: transparent; /* ZMĚNA: Průhledné pozadí */
 }
 
 #root {
   width: 100%;
-  min-height: 100vh;
+  height: 100%; /* Místo min-height: 100vh */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -23,23 +18,24 @@ body {
 
 .page-wrapper {
   width: 100%;
+  height: 100%; /* Místo 90vh */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 90vh;
   overflow: hidden;
 }
 
 .card {
-  width: 700px;
-  height: 90vh;
-  max-height: 100vh;
-  border-radius: 16px;
+  width: 100%; /* ZMĚNA: Místo 700px ať se přizpůsobí iframu */
+  height: 100%; /* ZMĚNA: Vyplní celý iframe */
+  max-height: none; /* Zrušit omezení */
+  border-radius: 0; /* Zrušit kulaté rohy - ať to řeší Webflow kontejner */
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding-inline: 5%;
+  padding-inline: 0; /* ZMĚNA: Obsah až do krajů */
+  background: transparent; /* Pro jistotu */
 }
 
 .labels-overlay {
@@ -54,10 +50,11 @@ body {
 
 /* Horní část - 3D fotka */
 .div-top {
-  height: 50vh;
-  padding: 0;
+  flex: 1; /* ZMĚNA: Roztáhne se do dostupného místa */
+  width: 100%;
   position: relative;
-  flex-shrink: 0;
+  /* height: 50vh; <- tohle můžeš smazat nebo nechat jako fallback */
+  min-height: 0; /* Důležité pro flexbox */
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -74,13 +71,13 @@ body {
 
 /* Spodní část - groundView */
 .div-bottom {
+  height: 40%; /* ZMĚNA: Procenta z výšky iframu jsou bezpečnější než vh */
+  min-height: 250px; /* Aby se to na mobilech nescvrklo moc */
+  width: 100%;
   position: relative;
   background-image: url("https://noho.b-cdn.net/vizualizace%20fotky/groundView_krakov.webp");
   background-size: cover;
   background-position: center;
-  height: 40vh;
-  min-height: 0;
-  flex-shrink: 0;
 }
 
 .psv-navbar {
