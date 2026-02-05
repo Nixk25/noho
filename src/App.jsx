@@ -460,7 +460,7 @@ function App() {
           {WINDMILLS.map((windmill) => (
             <img
               key={`windmill-${windmill.id}`}
-              src="/vetrnik.webp"
+              src="/novyVetrnik.webp"
               alt=""
               className="windmill-map-icon"
               style={{
