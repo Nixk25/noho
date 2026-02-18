@@ -56,22 +56,54 @@ const getPhotoUrls = (id) => ({
 // };
 
 // ============ NOVÁ VERZE - 3 LOKALITY S PANORAMA ============
-// Pozice větrníků na mapě - PEVNĚ 3 větrníky
+// Pozice větrníků na mapě - mění se dle switche (3/4/5)
 const WINDMILL_POSITIONS = {
-  desktop: [
-    { id: 1, top: "34%", left: "18%" },
-    { id: 2, top: "30%", left: "40%" },
-    { id: 3, top: "28%", left: "75%" },
-  ],
-  mobile: [
-    { id: 1, top: "33%", left: "21%" },
-    { id: 2, top: "27%", left: "41%" },
-    { id: 3, top: "23%", left: "73%" },
-  ],
+  3: {
+    desktop: [
+      { id: 1, top: "34%", left: "18%" },
+      { id: 2, top: "30%", left: "40%" },
+      { id: 3, top: "28%", left: "75%" },
+    ],
+    mobile: [
+      { id: 1, top: "33%", left: "21%" },
+      { id: 2, top: "27%", left: "41%" },
+      { id: 3, top: "23%", left: "73%" },
+    ],
+  },
+  4: {
+    desktop: [
+      { id: 1, top: "34%", left: "18%" },
+      { id: 2, top: "30%", left: "40%" },
+      { id: 3, top: "29%", left: "57%" },
+      { id: 4, top: "28%", left: "75%" },
+    ],
+    mobile: [
+      { id: 1, top: "33%", left: "21%" },
+      { id: 2, top: "27%", left: "41%" },
+      { id: 3, top: "25%", left: "57%" },
+      { id: 4, top: "23%", left: "73%" },
+    ],
+  },
+  5: {
+    desktop: [
+      { id: 1, top: "34%", left: "18%" },
+      { id: 2, top: "30%", left: "40%" },
+      { id: 3, top: "29%", left: "57%" },
+      { id: 4, top: "28%", left: "75%" },
+      { id: 5, top: "35%", left: "85%" },
+    ],
+    mobile: [
+      { id: 1, top: "33%", left: "21%" },
+      { id: 2, top: "27%", left: "41%" },
+      { id: 3, top: "25%", left: "57%" },
+      { id: 4, top: "23%", left: "73%" },
+      { id: 5, top: "30%", left: "83%" },
+    ],
+  },
 };
 
-// Base markery - desktop pozice
-const BASE_MARKERS_DESKTOP = [
+// Pozorovatelny - VŽDY PEVNĚ 3, nemění se se switchem
+const OBSERVATION_MARKERS_DESKTOP = [
   {
     id: 1,
     top: "61%",
@@ -93,17 +125,9 @@ const BASE_MARKERS_DESKTOP = [
     defaultRotation: -40,
     name: "3. Pohled z vesnice Lokalita C",
   },
-  {
-    id: 4,
-    top: "40%",
-    left: "85%",
-    defaultRotation: 0,
-    name: "4. Pohled z vesnice Lokalita D",
-  },
 ];
 
-// Base markery - mobile pozice
-const BASE_MARKERS_MOBILE = [
+const OBSERVATION_MARKERS_MOBILE = [
   {
     id: 1,
     top: "65%",
@@ -125,44 +149,7 @@ const BASE_MARKERS_MOBILE = [
     defaultRotation: -40,
     name: "3. Pohled z vesnice Lokalita C",
   },
-  {
-    id: 4,
-    top: "40%",
-    left: "90%",
-    defaultRotation: 0,
-    name: "4. Pohled z vesnice Lokalita D",
-  },
 ];
-
-// Přídavný pátý marker
-const ADDITIONAL_MARKER_DESKTOP = {
-  id: 5,
-  top: "70%",
-  left: "40%",
-  defaultRotation: 0,
-  name: "5. Pohled z vesnice Lokalita E",
-};
-
-const ADDITIONAL_MARKER_MOBILE = {
-  id: 5,
-  top: "70%",
-  left: "35%",
-  defaultRotation: 0,
-  name: "5. Pohled z vesnice Lokalita E",
-};
-
-// Funkce pro získání markerů podle počtu
-const getMarkers = (count, isMobile) => {
-  const base = isMobile ? BASE_MARKERS_MOBILE : BASE_MARKERS_DESKTOP;
-  const additional = isMobile
-    ? ADDITIONAL_MARKER_MOBILE
-    : ADDITIONAL_MARKER_DESKTOP;
-
-  if (count === 3) return base.slice(0, 3);
-  if (count === 4) return base;
-  if (count === 5) return [...base, additional];
-  return base;
-};
 
 // Dostupné počty větrníků
 const WINDMILL_COUNTS = [3, 4, 5];
@@ -230,11 +217,16 @@ function App() {
   const isMobile = useIsMobile(425);
 
   const [windmillCount, setWindmillCount] = useState(3);
-  const POSITIONS = getMarkers(windmillCount, isMobile);
 
+  // Větrníky na mapě se mění dle switche
   const WINDMILLS = isMobile
-    ? WINDMILL_POSITIONS.mobile
-    : WINDMILL_POSITIONS.desktop;
+    ? WINDMILL_POSITIONS[windmillCount].mobile
+    : WINDMILL_POSITIONS[windmillCount].desktop;
+
+  // Pozorovatelny jsou vždy pevně 3
+  const POSITIONS = isMobile
+    ? OBSERVATION_MARKERS_MOBILE
+    : OBSERVATION_MARKERS_DESKTOP;
 
   const [xrayMode, setXrayMode] = useState(false);
   const [activeMarker, setActiveMarker] = useState(1);
@@ -362,9 +354,11 @@ function App() {
               onClick={() => {
                 setWindmillCount(count);
                 setActiveMarker(1);
-                const newPositions = getMarkers(count, isMobile);
-                setRotation(newPositions[0].defaultRotation);
-                cumulativeRotation.current = newPositions[0].defaultRotation;
+                const firstMarker = isMobile
+                  ? OBSERVATION_MARKERS_MOBILE[0]
+                  : OBSERVATION_MARKERS_DESKTOP[0];
+                setRotation(firstMarker.defaultRotation);
+                cumulativeRotation.current = firstMarker.defaultRotation;
                 prevAngle.current = 0;
                 currentYaw.current = 0;
               }}
@@ -456,7 +450,7 @@ function App() {
 
         {/* Spodní část - ground view s kolečky */}
         <div className="div-bottom">
-          {/* Ikony větrníků na mapě - PEVNĚ 3 větrníky */}
+          {/* Ikony větrníků na mapě - počet dle switche */}
           {WINDMILLS.map((windmill) => (
             <img
               key={`windmill-${windmill.id}`}
