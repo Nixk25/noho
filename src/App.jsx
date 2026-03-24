@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from "react";
-import { ReactPhotoSphereViewer } from "react-photo-sphere-viewer";
+import { useState, useRef, useEffect, useCallback } from "react";
 import "./App.css";
 
 const BASE_URL = "https://noho.b-cdn.net/vizualizace%20fotky";
@@ -108,7 +107,8 @@ const OBSERVATION_MARKERS_DESKTOP = [
     id: 1,
     top: "61%",
     left: "35%",
-    defaultRotation: -50,
+    defaultRotation: -30,
+    rotationSpeed: 4,
     name: "1. Pohled z vesnice Lokalita A",
   },
   {
@@ -116,6 +116,7 @@ const OBSERVATION_MARKERS_DESKTOP = [
     top: "49%",
     left: "65%",
     defaultRotation: -40,
+    rotationSpeed: 2,
     name: "2. Pohled z vesnice Lokalita B",
   },
   {
@@ -123,6 +124,7 @@ const OBSERVATION_MARKERS_DESKTOP = [
     top: "47%",
     left: "70%",
     defaultRotation: -40,
+    rotationSpeed: 2,
     name: "3. Pohled z vesnice Lokalita C",
   },
 ];
@@ -133,6 +135,7 @@ const OBSERVATION_MARKERS_MOBILE = [
     top: "65%",
     left: "37%",
     defaultRotation: -50,
+    rotationSpeed: 4,
     name: "1. Pohled z vesnice Lokalita A",
   },
   {
@@ -140,6 +143,7 @@ const OBSERVATION_MARKERS_MOBILE = [
     top: "46%",
     left: "62%",
     defaultRotation: -40,
+    rotationSpeed: 2,
     name: "2. Pohled z vesnice Lokalita B",
   },
   {
@@ -147,6 +151,7 @@ const OBSERVATION_MARKERS_MOBILE = [
     top: "45%",
     left: "67%",
     defaultRotation: -40,
+    rotationSpeed: 2,
     name: "3. Pohled z vesnice Lokalita C",
   },
 ];
@@ -173,7 +178,15 @@ function useIsMobile(breakpoint = 425) {
 }
 
 // Komponenta pro kolečko s výsečí - bez transition na mobilu
-function Marker({ id, rotation = 0, top, left, isActive, onClick }) {
+function Marker({
+  id,
+  rotation = 0,
+  top,
+  left,
+  isActive,
+  onClick,
+  arcScale = 1,
+}) {
   return (
     <div className="marker-wrapper" style={{ top, left }}>
       <div
@@ -199,6 +212,10 @@ function Marker({ id, rotation = 0, top, left, isActive, onClick }) {
             height="53"
             viewBox="0 0 88 53"
             fill="none"
+            style={{
+              transform: `translate(-59%, -100%) scale(${arcScale})`,
+              transformOrigin: "59% 100%",
+            }}
           >
             <path
               d="M0.594995 41.9266C2.50375 33.0809 6.66539 24.875 12.6832 18.109C18.8118 11.2185 26.6474 6.06367 35.4011 3.16356C44.1549 0.263499 53.5182 -0.279537 62.5486 1.58883C71.4161 3.4235 79.654 7.52168 86.4668 13.4784L51.73 52.4521L0.594995 41.9266Z"
@@ -230,19 +247,25 @@ function App() {
 
   const [xrayMode, setXrayMode] = useState(false);
   const [activeMarker, setActiveMarker] = useState(1);
-  const [rotation, setRotation] = useState(POSITIONS[0].defaultRotation);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [panX, setPanX] = useState(0); // horizontální posun v procentech
+
+  // Limit posunu - stejný pro obě úrovně zoomu
+  const PAN_LIMIT = 25;
 
   // Získání aktuálního markeru pro zobrazení názvu
   const currentMarker =
     POSITIONS.find((p) => p.id === activeMarker) || POSITIONS[0];
 
-  // Sledujeme předchozí úhel a kumulativní rotaci
-  const prevAngle = useRef(0);
-  const cumulativeRotation = useRef(POSITIONS[0].defaultRotation);
+  // Rotace výseče na markeru odvozená z posunu (rychlost per marker)
+  const rotation =
+    currentMarker.defaultRotation - panX * (currentMarker.rotationSpeed || 4);
 
-  // Reference na viewer pro zachování pozice
-  const viewerRef = useRef(null);
-  const currentYaw = useRef(0);
+  // Reference pro drag
+  const containerRef = useRef(null);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const panStartX = useRef(0);
   const hasShownHint = useRef(false);
 
   // Přednačtení obrázků pro aktivní marker
@@ -258,88 +281,97 @@ function App() {
   const currentUrls = getPhotoUrls(activeMarker);
   const displayImage = xrayMode ? currentUrls.xray : currentUrls.normal;
 
-  // Funkce volaná při otáčení - lng je horizontální úhel (yaw)
-  const handlePositionChange = (lat, lng) => {
-    const degrees = lng * (180 / Math.PI);
-    currentYaw.current = lng; // Uložíme aktuální yaw v radiánech
+  // Drag/pan handlery
+  const handlePointerDown = useCallback(
+    (e) => {
+      isDragging.current = true;
+      dragStartX.current = e.clientX;
+      panStartX.current = panX;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
+    [panX],
+  );
 
-    let delta = degrees - prevAngle.current;
+  const handlePointerMove = useCallback(
+    (e) => {
+      if (!isDragging.current || !containerRef.current) return;
+      const dx = e.clientX - dragStartX.current;
+      const containerWidth = containerRef.current.offsetWidth;
+      const pct = (dx / containerWidth) * 40;
+      const limit = PAN_LIMIT;
+      const newPan = Math.max(-limit, Math.min(limit, panStartX.current + pct));
+      setPanX(newPan);
+    },
+    [isZoomed],
+  );
 
-    if (delta > 180) delta -= 360;
-    if (delta < -180) delta += 360;
+  const handlePointerUp = useCallback(() => {
+    isDragging.current = false;
+  }, []);
 
-    cumulativeRotation.current += delta;
-    prevAngle.current = degrees;
+  // Plynulý posun při držení šipky
+  const panInterval = useRef(null);
 
-    setRotation(cumulativeRotation.current);
+  const startPan = (direction) => {
+    if (panInterval.current) return;
+    const step = direction === "left" ? 0.4 : -0.4;
+    const panStep = () => {
+      setPanX((prev) => {
+        const limit = PAN_LIMIT;
+        return Math.max(-limit, Math.min(limit, prev + step));
+      });
+    };
+    panStep();
+    panInterval.current = setInterval(panStep, 16);
+  };
+
+  const stopPan = () => {
+    if (panInterval.current) {
+      clearInterval(panInterval.current);
+      panInterval.current = null;
+    }
   };
 
   // Přepnutí aktivního markeru
   const handleMarkerClick = (id) => {
     setActiveMarker(id);
-    const position = POSITIONS.find((p) => p.id === id);
-    cumulativeRotation.current = position.defaultRotation;
-    prevAngle.current = 0;
-    currentYaw.current = 0;
-    setRotation(position.defaultRotation);
+    setPanX(0);
+    setIsZoomed(false);
   };
 
-  // Plynulá rotace při držení šipky
-  const rotationInterval = useRef(null);
+  // Náznak posunu při prvním načtení
+  useEffect(() => {
+    if (hasShownHint.current) return;
+    hasShownHint.current = true;
+    const timer = setTimeout(() => {
+      let start = null;
+      const duration = 1000;
+      const animate = (timestamp) => {
+        if (!start) start = timestamp;
+        const p = (timestamp - start) / duration;
+        if (p < 0.25) {
+          setPanX(-8 * (p / 0.25));
+        } else if (p < 0.75) {
+          setPanX(-8 + 16 * ((p - 0.25) / 0.5));
+        } else if (p < 1) {
+          setPanX(8 - 8 * ((p - 0.75) / 0.25));
+        } else {
+          setPanX(0);
+          return;
+        }
+        requestAnimationFrame(animate);
+      };
+      requestAnimationFrame(animate);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const startRotation = (direction) => {
-    if (rotationInterval.current) return;
-    const rotateStep = () => {
-      if (!viewerRef.current) return;
-      const pos = viewerRef.current.getPosition();
-      const step = direction === "left" ? -0.015 : 0.015;
-      viewerRef.current.rotate({ yaw: pos.yaw + step, pitch: pos.pitch });
-    };
-    rotateStep();
-    rotationInterval.current = setInterval(rotateStep, 16);
-  };
-
-  const stopRotation = () => {
-    if (rotationInterval.current) {
-      clearInterval(rotationInterval.current);
-      rotationInterval.current = null;
-    }
-  };
-
-  // Callback když se viewer načte
-  const handleReady = (instance) => {
-    viewerRef.current = instance;
-    // Nastav pozici na uloženou hodnotu
-    if (currentYaw.current !== 0) {
-      instance.rotate({ yaw: currentYaw.current, pitch: 0 });
-    }
-
-    // Rychlý náznak rotace na obě strany - jen při prvním načtení
-    if (!hasShownHint.current) {
-      hasShownHint.current = true;
-      setTimeout(() => {
-        const startYaw = instance.getPosition().yaw;
-        instance
-          .animate({
-            yaw: startYaw - Math.PI / 20,
-            pitch: 0,
-            speed: "4rpm",
-          })
-          .then(() => {
-            return instance.animate({
-              yaw: startYaw + Math.PI / 20,
-              pitch: 0,
-              speed: "4rpm",
-            });
-          })
-          .then(() => {
-            instance.animate({
-              yaw: startYaw,
-              pitch: 0,
-              speed: "4rpm",
-            });
-          });
-      }, 300);
+  // Přepínání zoomu
+  const toggleZoom = (zoomIn) => {
+    if (zoomIn && !isZoomed) {
+      setIsZoomed(true);
+    } else if (!zoomIn && isZoomed) {
+      setIsZoomed(false);
     }
   };
 
@@ -354,13 +386,8 @@ function App() {
               onClick={() => {
                 setWindmillCount(count);
                 setActiveMarker(1);
-                const firstMarker = isMobile
-                  ? OBSERVATION_MARKERS_MOBILE[0]
-                  : OBSERVATION_MARKERS_DESKTOP[0];
-                setRotation(firstMarker.defaultRotation);
-                cumulativeRotation.current = firstMarker.defaultRotation;
-                prevAngle.current = 0;
-                currentYaw.current = 0;
+                setPanX(0);
+                setIsZoomed(false);
               }}
             >
               <span>{count}</span>
@@ -368,32 +395,83 @@ function App() {
             </button>
           ))}
         </div>
-        {/* Horní část - 3D sphere viewer */}
+        {/* Horní část - prohlížeč obrázků */}
         <div className="div-top">
-          <ReactPhotoSphereViewer
-            key={`${activeMarker}-${displayImage}`}
-            src={displayImage}
-            height={"100%"}
-            width={"100%"}
-            containerClass="viewer-container"
-            onPositionChange={handlePositionChange}
-            onReady={handleReady}
-            navbar={false}
-          />
+          <div
+            ref={containerRef}
+            className="image-viewer"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+          >
+            <img
+              src={displayImage}
+              alt="Vizualizace"
+              className="viewer-image"
+              draggable={false}
+              style={{
+                objectPosition: `${50 - panX}% 50%`,
+                transform: isZoomed ? "scale(1.5)" : "scale(1)",
+                transformOrigin: `${50 - panX}% 50%`,
+              }}
+            />
+          </div>
+
+          {/* Ikony zoomu - lupičky */}
+          <div className="zoom-controls">
+            <button
+              className={`zoom-btn zoom-btn-large ${isZoomed ? "zoom-btn-active" : ""}`}
+              onClick={() => toggleZoom(true)}
+              title="Přiblížit"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                width="26"
+                height="26"
+              >
+                <circle cx="10" cy="10" r="7" />
+                <line x1="15" y1="15" x2="21" y2="21" />
+                <line x1="7" y1="10" x2="13" y2="10" />
+                <line x1="10" y1="7" x2="10" y2="13" />
+              </svg>
+            </button>
+            <button
+              className={`zoom-btn zoom-btn-small ${!isZoomed ? "zoom-btn-active" : ""}`}
+              onClick={() => toggleZoom(false)}
+              title="Oddálit"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                width="18"
+                height="18"
+              >
+                <circle cx="10" cy="10" r="7" />
+                <line x1="15" y1="15" x2="21" y2="21" />
+                <line x1="7" y1="10" x2="13" y2="10" />
+              </svg>
+            </button>
+          </div>
 
           {/* Navigační šipky */}
           <button
             className="nav-arrow nav-arrow-left"
-            onMouseDown={() => startRotation("left")}
-            onMouseUp={stopRotation}
-            onMouseLeave={stopRotation}
+            onMouseDown={() => startPan("left")}
+            onMouseUp={stopPan}
+            onMouseLeave={stopPan}
             onTouchStart={(e) => {
               e.preventDefault();
-              startRotation("left");
+              startPan("left");
             }}
             onTouchMove={(e) => e.preventDefault()}
-            onTouchEnd={stopRotation}
-            onTouchCancel={stopRotation}
+            onTouchEnd={stopPan}
+            onTouchCancel={stopPan}
             onContextMenu={(e) => e.preventDefault()}
           >
             <svg
@@ -407,16 +485,16 @@ function App() {
           </button>
           <button
             className="nav-arrow nav-arrow-right"
-            onMouseDown={() => startRotation("right")}
-            onMouseUp={stopRotation}
-            onMouseLeave={stopRotation}
+            onMouseDown={() => startPan("right")}
+            onMouseUp={stopPan}
+            onMouseLeave={stopPan}
             onTouchStart={(e) => {
               e.preventDefault();
-              startRotation("right");
+              startPan("right");
             }}
             onTouchMove={(e) => e.preventDefault()}
-            onTouchEnd={stopRotation}
-            onTouchCancel={stopRotation}
+            onTouchEnd={stopPan}
+            onTouchCancel={stopPan}
             onContextMenu={(e) => e.preventDefault()}
           >
             <svg
@@ -476,6 +554,7 @@ function App() {
               left={pos.left}
               isActive={activeMarker === pos.id}
               onClick={() => handleMarkerClick(pos.id)}
+              arcScale={isZoomed ? 0.7 : 1.15}
             />
           ))}
         </div>
