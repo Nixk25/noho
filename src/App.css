@@ -53,7 +53,7 @@ body {
   flex: 1; /* ZMĚNA: Roztáhne se do dostupného místa */
   width: 100%;
   position: relative;
-  /* height: 50vh; <- tohle můžeš smazat nebo nechat jako fallback */
+  z-index: 2;
   min-height: 0; /* Důležité pro flexbox */
   user-select: none;
   -webkit-user-select: none;
@@ -75,6 +75,7 @@ body {
   min-height: 250px; /* Aby se to na mobilech nescvrklo moc */
   width: 100%;
   position: relative;
+  z-index: 1;
   background-image: url("https://noho.b-cdn.net/vizualizace%20fotky/groundView_krakov.webp");
   background-size: cover;
   background-position: center;
@@ -111,7 +112,7 @@ body {
 /* Zoom controls - lupičky */
 .zoom-controls {
   position: absolute;
-  top: 20px;
+  bottom: 50px;
   right: 16px;
   z-index: 20;
   display: flex;
@@ -339,10 +340,10 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
+  transform: translate(-59%, -100%);
   z-index: 1;
   pointer-events: none;
   user-select: none;
-  transition: transform 0.3s ease;
 }
 
 /* Pozice 8 markerů na ground view */

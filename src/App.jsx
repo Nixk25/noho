@@ -55,101 +55,54 @@ const getPhotoUrls = (id) => ({
 // };
 
 // ============ NOVÁ VERZE - 3 LOKALITY S PANORAMA ============
-// Pozice větrníků na mapě - mění se dle switche (3/4/5)
+// URL obrázku mapy
+const MAP_URL =
+  "https://noho.b-cdn.net/vizualizace%20fotky/groundView_krakov.webp";
+
+// Pozice větrníků na mapě - souřadnice v % obrázku (ne kontejneru)
 const WINDMILL_POSITIONS = {
-  3: {
-    desktop: [
-      { id: 1, top: "34%", left: "18%" },
-      { id: 2, top: "30%", left: "40%" },
-      { id: 3, top: "28%", left: "75%" },
-    ],
-    mobile: [
-      { id: 1, top: "33%", left: "21%" },
-      { id: 2, top: "27%", left: "41%" },
-      { id: 3, top: "23%", left: "73%" },
-    ],
-  },
-  4: {
-    desktop: [
-      { id: 1, top: "34%", left: "18%" },
-      { id: 2, top: "30%", left: "40%" },
-      { id: 3, top: "29%", left: "57%" },
-      { id: 4, top: "28%", left: "75%" },
-    ],
-    mobile: [
-      { id: 1, top: "33%", left: "21%" },
-      { id: 2, top: "27%", left: "41%" },
-      { id: 3, top: "25%", left: "57%" },
-      { id: 4, top: "23%", left: "73%" },
-    ],
-  },
-  5: {
-    desktop: [
-      { id: 1, top: "34%", left: "18%" },
-      { id: 2, top: "30%", left: "40%" },
-      { id: 3, top: "29%", left: "57%" },
-      { id: 4, top: "28%", left: "75%" },
-      { id: 5, top: "35%", left: "85%" },
-    ],
-    mobile: [
-      { id: 1, top: "33%", left: "21%" },
-      { id: 2, top: "27%", left: "41%" },
-      { id: 3, top: "25%", left: "57%" },
-      { id: 4, top: "23%", left: "73%" },
-      { id: 5, top: "30%", left: "83%" },
-    ],
-  },
+  3: [
+    { id: 1, imgTop: 22, imgLeft: 21 },
+    { id: 2, imgTop: 10, imgLeft: 40.5 },
+    { id: 3, imgTop: 3, imgLeft: 72.5 },
+  ],
+  4: [
+    { id: 1, imgTop: 22, imgLeft: 21 },
+    { id: 2, imgTop: 10, imgLeft: 40.5 },
+    { id: 3, imgTop: 3, imgLeft: 57 },
+    { id: 4, imgTop: 3, imgLeft: 72.5 },
+  ],
+  5: [
+    { id: 1, imgTop: 22, imgLeft: 21 },
+    { id: 2, imgTop: 10, imgLeft: 40.5 },
+    { id: 3, imgTop: 3, imgLeft: 57 },
+    { id: 4, imgTop: 3, imgLeft: 72.5 },
+    { id: 5, imgTop: 10, imgLeft: 83 },
+  ],
 };
 
-// Pozorovatelny - VŽDY PEVNĚ 3, nemění se se switchem
-const OBSERVATION_MARKERS_DESKTOP = [
+// Pozorovatelny - souřadnice v % obrázku
+const OBSERVATION_MARKERS = [
   {
     id: 1,
-    top: "61%",
-    left: "35%",
-    defaultRotation: -30,
-    rotationSpeed: 4,
-    name: "1. Pohled z vesnice Lokalita A",
-  },
-  {
-    id: 2,
-    top: "49%",
-    left: "65%",
-    defaultRotation: -40,
-    rotationSpeed: 2,
-    name: "2. Pohled z vesnice Lokalita B",
-  },
-  {
-    id: 3,
-    top: "47%",
-    left: "70%",
-    defaultRotation: -40,
-    rotationSpeed: 2,
-    name: "3. Pohled z vesnice Lokalita C",
-  },
-];
-
-const OBSERVATION_MARKERS_MOBILE = [
-  {
-    id: 1,
-    top: "65%",
-    left: "37%",
+    imgTop: 92,
+    imgLeft: 38,
     defaultRotation: -50,
     rotationSpeed: 4,
     name: "1. Pohled z vesnice Lokalita A",
   },
   {
     id: 2,
-    top: "46%",
-    left: "62%",
+    imgTop: 62,
+    imgLeft: 64.5,
     defaultRotation: -40,
     rotationSpeed: 2,
     name: "2. Pohled z vesnice Lokalita B",
   },
   {
     id: 3,
-    top: "45%",
-    left: "67%",
+    imgTop: 57,
+    imgLeft: 68.5,
     defaultRotation: -40,
     rotationSpeed: 2,
     name: "3. Pohled z vesnice Lokalita C",
@@ -175,6 +128,68 @@ function useIsMobile(breakpoint = 425) {
   }, [breakpoint]);
 
   return isMobile;
+}
+
+// Hook pro přepočet souřadnic z obrázku na kontejner (background-size: cover)
+function useMapCover(containerRef, imageUrl) {
+  const [imgRatio, setImgRatio] = useState(null);
+  const [containerSize, setContainerSize] = useState(null);
+
+  // Načíst poměr stran obrázku
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => setImgRatio(img.naturalWidth / img.naturalHeight);
+    img.src = imageUrl;
+  }, [imageUrl]);
+
+  // Sledovat velikost kontejneru
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const measure = () => {
+      const el = containerRef.current;
+      if (el) setContainerSize({ w: el.offsetWidth, h: el.offsetHeight });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [containerRef]);
+
+  // Funkce pro převod souřadnic obrázku -> kontejneru
+  const toContainer = useCallback(
+    (imgLeftPct, imgTopPct) => {
+      if (!containerSize || !imgRatio) {
+        return { top: `${imgTopPct}%`, left: `${imgLeftPct}%` };
+      }
+      const { w: cw, h: ch } = containerSize;
+      const cr = cw / ch;
+
+      let rw, rh, ox, oy;
+      if (cr > imgRatio) {
+        // Kontejner je širší - obrázek vyplní šířku, přeteče výškou
+        rw = cw;
+        rh = cw / imgRatio;
+        ox = 0;
+        oy = (ch - rh) / 2;
+      } else {
+        // Kontejner je vyšší - obrázek vyplní výšku, přeteče šířkou
+        rh = ch;
+        rw = ch * imgRatio;
+        ox = (cw - rw) / 2;
+        oy = 0;
+      }
+
+      const x = ox + (imgLeftPct / 100) * rw;
+      const y = oy + (imgTopPct / 100) * rh;
+      return {
+        left: `${(x / cw) * 100}%`,
+        top: `${(y / ch) * 100}%`,
+      };
+    },
+    [containerSize, imgRatio],
+  );
+
+  return toContainer;
 }
 
 // Komponenta pro kolečko s výsečí - bez transition na mobilu
@@ -232,18 +247,14 @@ function Marker({
 
 function App() {
   const isMobile = useIsMobile(425);
+  const mapContainerRef = useRef(null);
+  const toMapPos = useMapCover(mapContainerRef, MAP_URL);
 
   const [windmillCount, setWindmillCount] = useState(3);
 
-  // Větrníky na mapě se mění dle switche
-  const WINDMILLS = isMobile
-    ? WINDMILL_POSITIONS[windmillCount].mobile
-    : WINDMILL_POSITIONS[windmillCount].desktop;
-
-  // Pozorovatelny jsou vždy pevně 3
-  const POSITIONS = isMobile
-    ? OBSERVATION_MARKERS_MOBILE
-    : OBSERVATION_MARKERS_DESKTOP;
+  // Větrníky a pozorovatelny - jedna sada, pozice se přepočítají dynamicky
+  const WINDMILLS = WINDMILL_POSITIONS[windmillCount];
+  const POSITIONS = OBSERVATION_MARKERS;
 
   const [xrayMode, setXrayMode] = useState(false);
   const [activeMarker, setActiveMarker] = useState(1);
@@ -527,36 +538,39 @@ function App() {
         </div>
 
         {/* Spodní část - ground view s kolečky */}
-        <div className="div-bottom">
+        <div className="div-bottom" ref={mapContainerRef}>
           {/* Ikony větrníků na mapě - počet dle switche */}
-          {WINDMILLS.map((windmill) => (
-            <img
-              key={`windmill-${windmill.id}`}
-              src="/novyVetrnik.webp"
-              alt=""
-              className="windmill-map-icon"
-              style={{
-                top: windmill.top,
-                left: windmill.left,
-              }}
-            />
-          ))}
+          {WINDMILLS.map((windmill) => {
+            const pos = toMapPos(windmill.imgLeft, windmill.imgTop);
+            return (
+              <img
+                key={`windmill-${windmill.id}`}
+                src="/novyVetrnik.webp"
+                alt=""
+                className="windmill-map-icon"
+                style={pos}
+              />
+            );
+          })}
 
           {/* Kolečka s čísly */}
-          {POSITIONS.map((pos, index) => (
-            <Marker
-              key={pos.id}
-              id={index + 1}
-              rotation={
-                activeMarker === pos.id ? rotation : pos.defaultRotation
-              }
-              top={pos.top}
-              left={pos.left}
-              isActive={activeMarker === pos.id}
-              onClick={() => handleMarkerClick(pos.id)}
-              arcScale={isZoomed ? 0.7 : 1.15}
-            />
-          ))}
+          {POSITIONS.map((marker, index) => {
+            const pos = toMapPos(marker.imgLeft, marker.imgTop);
+            return (
+              <Marker
+                key={marker.id}
+                id={index + 1}
+                rotation={
+                  activeMarker === marker.id ? rotation : marker.defaultRotation
+                }
+                top={pos.top}
+                left={pos.left}
+                isActive={activeMarker === marker.id}
+                onClick={() => handleMarkerClick(marker.id)}
+                arcScale={isZoomed ? 0.7 : 1.15}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
