@@ -62,22 +62,22 @@ const MAP_URL =
 // Pozice větrníků na mapě - souřadnice v % obrázku (ne kontejneru)
 const WINDMILL_POSITIONS = {
   3: [
-    { id: 1, imgTop: 22, imgLeft: 21 },
-    { id: 2, imgTop: 10, imgLeft: 40.5 },
-    { id: 3, imgTop: 3, imgLeft: 72.5 },
+    { id: 1, imgTop: 40, imgLeft: 21 },
+    { id: 2, imgTop: 34, imgLeft: 41 },
+    { id: 3, imgTop: 32, imgLeft: 73 },
   ],
   4: [
-    { id: 1, imgTop: 22, imgLeft: 21 },
-    { id: 2, imgTop: 10, imgLeft: 40.5 },
-    { id: 3, imgTop: 3, imgLeft: 57 },
-    { id: 4, imgTop: 3, imgLeft: 72.5 },
+    { id: 1, imgTop: 40, imgLeft: 21 },
+    { id: 2, imgTop: 34, imgLeft: 41 },
+    { id: 3, imgTop: 32, imgLeft: 57 },
+    { id: 4, imgTop: 32, imgLeft: 73 },
   ],
   5: [
-    { id: 1, imgTop: 22, imgLeft: 21 },
-    { id: 2, imgTop: 10, imgLeft: 40.5 },
-    { id: 3, imgTop: 3, imgLeft: 57 },
-    { id: 4, imgTop: 3, imgLeft: 72.5 },
-    { id: 5, imgTop: 10, imgLeft: 83 },
+    { id: 1, imgTop: 40, imgLeft: 21 },
+    { id: 2, imgTop: 34, imgLeft: 41 },
+    { id: 3, imgTop: 32, imgLeft: 57 },
+    { id: 4, imgTop: 32, imgLeft: 73 },
+    { id: 5, imgTop: 50, imgLeft: 83 },
   ],
 };
 
@@ -85,7 +85,7 @@ const WINDMILL_POSITIONS = {
 const OBSERVATION_MARKERS = [
   {
     id: 1,
-    imgTop: 92,
+    imgTop: 67,
     imgLeft: 38,
     defaultRotation: -50,
     rotationSpeed: 4,
@@ -93,7 +93,7 @@ const OBSERVATION_MARKERS = [
   },
   {
     id: 2,
-    imgTop: 62,
+    imgTop: 55,
     imgLeft: 64.5,
     defaultRotation: -40,
     rotationSpeed: 2,
@@ -101,7 +101,7 @@ const OBSERVATION_MARKERS = [
   },
   {
     id: 3,
-    imgTop: 57,
+    imgTop: 53,
     imgLeft: 68.5,
     defaultRotation: -40,
     rotationSpeed: 2,
