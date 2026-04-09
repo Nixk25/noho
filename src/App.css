@@ -76,9 +76,11 @@ body {
   width: 100%;
   position: relative;
   z-index: 1;
-  background-image: url("https://noho.b-cdn.net/vizualizace%20fotky/groundView_krakov.webp");
-  background-size: cover;
+  background-color: #efeae2; /* match bg webu pro letterbox kolem mapy */
+  background-image: url("https://noho.b-cdn.net/vizualizace%20fotky/groundView_drahous.webp");
+  background-size: contain; /* ZMĚNA: contain místo cover, aby byla vidět celá mapa a všechny body */
   background-position: center;
+  background-repeat: no-repeat; /* aby se nedělala "tapeta" v prázdných okrajích */
 }
 
 .psv-navbar {
@@ -107,6 +109,34 @@ body {
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
+}
+
+/* Loader overlay během přepínání fotky */
+.image-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(2px);
+  z-index: 15;
+  pointer-events: none;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid rgba(4, 41, 81, 0.2);
+  border-top-color: #042951;
+  border-radius: 50%;
+  animation: spinner-rotate 0.8s linear infinite;
+}
+
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Zoom controls - lupičky */

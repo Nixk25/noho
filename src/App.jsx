@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import "./App.css";
 
 const BASE_URL = "https://noho.b-cdn.net/vizualizace%20fotky";
 
-// Generování URL pro fotky
+// Generování URL pro fotky - Drahouš
 const getPhotoUrls = (id) => ({
-  normal: `${BASE_URL}/x0${id}_krakov.webp`,
-  xray: `${BASE_URL}/x0${id}_krakov_S.webp`,
+  normal: `${BASE_URL}/panorama_${id}.webp`,
+  xray: `${BASE_URL}/prekazka_${id}.webp`,
 });
 // ============ STARÁ VERZE - ZAKOMENTOVÁNO ============
 // const MARKER_CONFIGS = {
@@ -54,84 +54,126 @@ const getPhotoUrls = (id) => ({
 //   },
 // };
 
-// ============ NOVÁ VERZE - 3 LOKALITY S PANORAMA ============
+// ============ DRAHOUŠ - 3 VĚTRNÍKY, 7 POHLEDŮ ============
 // URL obrázku mapy
 const MAP_URL =
-  "https://noho.b-cdn.net/vizualizace%20fotky/groundView_krakov.webp";
+  "https://noho.b-cdn.net/vizualizace%20fotky/groundView_drahous.webp";
 
-// Pozice větrníků na mapě - souřadnice v % obrázku (ne kontejneru)
-const WINDMILL_POSITIONS = {
-  3: [
-    { id: 1, imgTop: 40, imgLeft: 21 },
-    { id: 2, imgTop: 34, imgLeft: 41 },
-    { id: 3, imgTop: 32, imgLeft: 73 },
-  ],
-  4: [
-    { id: 1, imgTop: 40, imgLeft: 21 },
-    { id: 2, imgTop: 34, imgLeft: 41 },
-    { id: 3, imgTop: 32, imgLeft: 57 },
-    { id: 4, imgTop: 32, imgLeft: 73 },
-  ],
-  5: [
-    { id: 1, imgTop: 40, imgLeft: 21 },
-    { id: 2, imgTop: 34, imgLeft: 41 },
-    { id: 3, imgTop: 32, imgLeft: 57 },
-    { id: 4, imgTop: 32, imgLeft: 73 },
-    { id: 5, imgTop: 50, imgLeft: 83 },
-  ],
-};
+// ============ ZAKOMENTOVÁNO - pozice větrníků (Drahouš má větrníky zapečené v ground view) ============
+// const WINDMILLS = [
+//   { id: 1, imgTop: 50, imgLeft: 43 },
+//   { id: 2, imgTop: 56, imgLeft: 41 },
+//   { id: 3, imgTop: 60, imgLeft: 39 },
+// ];
 
-// Pozorovatelny - souřadnice v % obrázku
+// ============ ZAKOMENTOVÁNO - varianta s přepínáním 3/4/5 větrníků (Krakov) ============
+// Pro jiné lokality se hodí přepínač - zachovat pro budoucí použití
+// const WINDMILL_POSITIONS = {
+//   3: [
+//     { id: 1, imgTop: 40, imgLeft: 21 },
+//     { id: 2, imgTop: 34, imgLeft: 41 },
+//     { id: 3, imgTop: 32, imgLeft: 73 },
+//   ],
+//   4: [
+//     { id: 1, imgTop: 40, imgLeft: 21 },
+//     { id: 2, imgTop: 34, imgLeft: 41 },
+//     { id: 3, imgTop: 32, imgLeft: 57 },
+//     { id: 4, imgTop: 32, imgLeft: 73 },
+//   ],
+//   5: [
+//     { id: 1, imgTop: 40, imgLeft: 21 },
+//     { id: 2, imgTop: 34, imgLeft: 41 },
+//     { id: 3, imgTop: 32, imgLeft: 57 },
+//     { id: 4, imgTop: 32, imgLeft: 73 },
+//     { id: 5, imgTop: 50, imgLeft: 83 },
+//   ],
+// };
+// const WINDMILL_COUNTS = [3, 4, 5];
+
+// 7 pozorovatelen - souřadnice v % obrázku
+// TODO: doladit přesné pozice + jména po nahrání fotek na bunny.net
 const OBSERVATION_MARKERS = [
   {
     id: 1,
-    imgTop: 67,
-    imgLeft: 38,
-    defaultRotation: -50,
-    rotationSpeed: 4,
-    name: "1. Pohled z vesnice Lokalita A",
+    imgTop: 47,
+    imgLeft: 35,
+    defaultRotation: 150,
+    rotationSpeed: 3,
+    name: "1. Lokalita 1",
   },
   {
     id: 2,
-    imgTop: 55,
-    imgLeft: 64.5,
-    defaultRotation: -40,
-    rotationSpeed: 2,
-    name: "2. Pohled z vesnice Lokalita B",
+    imgTop: 42,
+    imgLeft: 35,
+    defaultRotation: 170,
+    rotationSpeed: 3,
+    name: "2. Lokalita 2",
   },
   {
     id: 3,
-    imgTop: 53,
-    imgLeft: 68.5,
-    defaultRotation: -40,
-    rotationSpeed: 2,
-    name: "3. Pohled z vesnice Lokalita C",
+    imgTop: 54,
+    imgLeft: 29,
+    defaultRotation: 120,
+    rotationSpeed: 3,
+    name: "3. Lokalita 3",
+  },
+  {
+    id: 4,
+    imgTop: 75,
+    imgLeft: 26,
+    defaultRotation: 80,
+    rotationSpeed: 3,
+    name: "4. Lokalita 4",
+  },
+  {
+    id: 5,
+    imgTop: 25,
+    imgLeft: 31,
+    defaultRotation: 180,
+    rotationSpeed: 3,
+    name: "5. Lokalita 5",
+  },
+  {
+    id: 6,
+    imgTop: 24,
+    imgLeft: 57,
+    defaultRotation: 210,
+    rotationSpeed: 3,
+    name: "6. Lokalita 6",
+  },
+  {
+    id: 7,
+    imgTop: 67,
+    imgLeft: 75,
+    defaultRotation: 320,
+    rotationSpeed: 3,
+    name: "7. Lokalita 7",
   },
 ];
 
-// Dostupné počty větrníků
-const WINDMILL_COUNTS = [3, 4, 5];
+// ============ ZAKOMENTOVÁNO - hook pro detekci mobilu (zatím nepoužitý) ============
+// function useIsMobile(breakpoint = 425) {
+//   const [isMobile, setIsMobile] = useState(
+//     typeof window !== "undefined" ? window.innerWidth <= breakpoint : false,
+//   );
+//
+//   useEffect(() => {
+//     const handleResize = () => {
+//       setIsMobile(window.innerWidth <= breakpoint);
+//     };
+//
+//     window.addEventListener("resize", handleResize);
+//     return () => window.removeEventListener("resize", handleResize);
+//   }, [breakpoint]);
+//
+//   return isMobile;
+// }
 
-// Hook pro detekci mobilu
-function useIsMobile(breakpoint = 425) {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth <= breakpoint : false,
-  );
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= breakpoint);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [breakpoint]);
-
-  return isMobile;
-}
-
-// Hook pro přepočet souřadnic z obrázku na kontejner (background-size: cover)
-function useMapCover(containerRef, imageUrl) {
+// Hook pro přepočet souřadnic z obrázku na kontejner.
+// Počítá "contain" rozložení a navíc umožňuje volitelný `zoom` (>1 = víc přiblížené,
+// stále vycentrované; markery i background-size jsou ze stejného výpočtu, takže
+// CSS background a marker pozice jsou vždy v sync).
+function useMapContain(containerRef, imageUrl, zoom = 1) {
   const [imgRatio, setImgRatio] = useState(null);
   const [containerSize, setContainerSize] = useState(null);
 
@@ -155,30 +197,38 @@ function useMapCover(containerRef, imageUrl) {
     return () => observer.disconnect();
   }, [containerRef]);
 
+  // Vypočítat "contain × zoom" rozložení
+  const layout = useMemo(() => {
+    if (!containerSize || !imgRatio) return null;
+    const { w: cw, h: ch } = containerSize;
+    const cr = cw / ch;
+
+    let rw, rh;
+    if (cr > imgRatio) {
+      // Kontejner širší než obrázek - obrázek vyplní výšku
+      rh = ch;
+      rw = ch * imgRatio;
+    } else {
+      // Kontejner užší než obrázek - obrázek vyplní šířku
+      rw = cw;
+      rh = cw / imgRatio;
+    }
+
+    // Aplikovat zoom (stále vycentrované, může lehce přesahovat)
+    rw *= zoom;
+    rh *= zoom;
+    const ox = (cw - rw) / 2;
+    const oy = (ch - rh) / 2;
+    return { cw, ch, rw, rh, ox, oy };
+  }, [containerSize, imgRatio, zoom]);
+
   // Funkce pro převod souřadnic obrázku -> kontejneru
   const toContainer = useCallback(
     (imgLeftPct, imgTopPct) => {
-      if (!containerSize || !imgRatio) {
+      if (!layout) {
         return { top: `${imgTopPct}%`, left: `${imgLeftPct}%` };
       }
-      const { w: cw, h: ch } = containerSize;
-      const cr = cw / ch;
-
-      let rw, rh, ox, oy;
-      if (cr > imgRatio) {
-        // Kontejner je širší - obrázek vyplní šířku, přeteče výškou
-        rw = cw;
-        rh = cw / imgRatio;
-        ox = 0;
-        oy = (ch - rh) / 2;
-      } else {
-        // Kontejner je vyšší - obrázek vyplní výšku, přeteče šířkou
-        rh = ch;
-        rw = ch * imgRatio;
-        ox = (cw - rw) / 2;
-        oy = 0;
-      }
-
+      const { cw, ch, rw, rh, ox, oy } = layout;
       const x = ox + (imgLeftPct / 100) * rw;
       const y = oy + (imgTopPct / 100) * rh;
       return {
@@ -186,10 +236,18 @@ function useMapCover(containerRef, imageUrl) {
         top: `${(y / ch) * 100}%`,
       };
     },
-    [containerSize, imgRatio],
+    [layout],
   );
 
-  return toContainer;
+  // Style pro inline aplikaci na div s background-image
+  const bgStyle = layout
+    ? {
+        backgroundSize: `${layout.rw}px ${layout.rh}px`,
+        backgroundPosition: `${layout.ox}px ${layout.oy}px`,
+      }
+    : null;
+
+  return { toContainer, bgStyle };
 }
 
 // Komponenta pro kolečko s výsečí - bez transition na mobilu
@@ -246,20 +304,32 @@ function Marker({
 }
 
 function App() {
-  const isMobile = useIsMobile(425);
   const mapContainerRef = useRef(null);
-  const toMapPos = useMapCover(mapContainerRef, MAP_URL);
+  // Mapa: contain × MAP_ZOOM (1.0 = klasický contain, >1 = víc přiblížené)
+  const MAP_ZOOM = 1.5;
+  const { toContainer: toMapPos, bgStyle: mapBgStyle } = useMapContain(
+    mapContainerRef,
+    MAP_URL,
+    MAP_ZOOM,
+  );
 
-  const [windmillCount, setWindmillCount] = useState(3);
+  // ============ ZAKOMENTOVÁNO - state pro switcher (Krakov) ============
+  // const [windmillCount, setWindmillCount] = useState(3);
+  // const WINDMILLS_DYNAMIC = WINDMILL_POSITIONS[windmillCount];
 
-  // Větrníky a pozorovatelny - jedna sada, pozice se přepočítají dynamicky
-  const WINDMILLS = WINDMILL_POSITIONS[windmillCount];
+  // Pozorovatelny
   const POSITIONS = OBSERVATION_MARKERS;
 
   const [xrayMode, setXrayMode] = useState(false);
   const [activeMarker, setActiveMarker] = useState(1);
   const [isZoomed, setIsZoomed] = useState(false);
   const [panX, setPanX] = useState(0); // horizontální posun v procentech
+
+  // Aspect ratio aktuálního normal/xray obrázku (pro detekci, jestli se vůbec dá panovat)
+  const [normalAspect, setNormalAspect] = useState(null);
+  const [xrayAspect, setXrayAspect] = useState(null);
+  // Velikost prohlížeče (pro detekci canPan)
+  const [viewerSize, setViewerSize] = useState(null);
 
   // Limit posunu - stejný pro obě úrovně zoomu
   const PAN_LIMIT = 25;
@@ -268,10 +338,6 @@ function App() {
   const currentMarker =
     POSITIONS.find((p) => p.id === activeMarker) || POSITIONS[0];
 
-  // Rotace výseče na markeru odvozená z posunu (rychlost per marker)
-  const rotation =
-    currentMarker.defaultRotation - panX * (currentMarker.rotationSpeed || 4);
-
   // Reference pro drag
   const containerRef = useRef(null);
   const isDragging = useRef(false);
@@ -279,33 +345,103 @@ function App() {
   const panStartX = useRef(0);
   const hasShownHint = useRef(false);
 
-  // Přednačtení obrázků pro aktivní marker
+  // Přednačtení obrázků + měření aspect ratio pro aktivní marker
   useEffect(() => {
     const urls = getPhotoUrls(activeMarker);
     const normalImg = new Image();
     const xrayImg = new Image();
+    normalImg.onload = () =>
+      setNormalAspect(normalImg.naturalWidth / normalImg.naturalHeight);
+    xrayImg.onload = () =>
+      setXrayAspect(xrayImg.naturalWidth / xrayImg.naturalHeight);
     normalImg.src = urls.normal;
     xrayImg.src = urls.xray;
   }, [activeMarker]);
 
-  // Aktuální zobrazovaný obrázek
+  // Sledovat velikost prohlížeče
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const measure = () => {
+      const el = containerRef.current;
+      if (el) setViewerSize({ w: el.offsetWidth, h: el.offsetHeight });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // Cílová URL fotky (může být ještě nenahraná)
   const currentUrls = getPhotoUrls(activeMarker);
-  const displayImage = xrayMode ? currentUrls.xray : currentUrls.normal;
+  const targetImage = xrayMode ? currentUrls.xray : currentUrls.normal;
+  const currentAspect = xrayMode ? xrayAspect : normalAspect;
+
+  // "Double-buffering": zobrazenou fotku necháme starou dokud se nová nenahraje.
+  // isImageLoading je odvozený stav (target ≠ display), aby se nemuselo
+  // setState volat synchronně v efektu.
+  const [displayImage, setDisplayImage] = useState(targetImage);
+  const isImageLoading = targetImage !== displayImage;
+
+  useEffect(() => {
+    if (targetImage === displayImage) return;
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      if (cancelled) return;
+      setDisplayImage(targetImage);
+    };
+    img.src = targetImage;
+    return () => {
+      cancelled = true;
+    };
+  }, [targetImage, displayImage]);
+
+  // Spočítá, jak moc fotka skutečně přetéká horizontálně (jako podíl šířky kontejneru).
+  // Bere v úvahu object-fit: cover ZÁROVEŇ s transform: scale (zoom), takže výseč se
+  // hýbe přesně tak, jak se hýbe fotka — bez ohledu na velikost obrazovky a režim.
+  const horizontalOverflow = useMemo(() => {
+    if (!currentAspect || !viewerSize) return 0;
+    const { w: cw, h: ch } = viewerSize;
+    // Cover mód: image vyplní kratší rozměr, na druhém přetéká
+    let renderedW = currentAspect > cw / ch ? ch * currentAspect : cw;
+    // Zoom (transform: scale 1.5) zvětšuje vizuálně 1.5×
+    if (isZoomed) renderedW *= 1.5;
+    return Math.max(0, (renderedW - cw) / cw);
+  }, [currentAspect, viewerSize, isZoomed]);
+
+  // Pannout jde jen pokud je nějaký smysluplný přesah (>2% šířky)
+  const canPanHorizontally = horizontalOverflow > 0.02;
+
+  // Když fotka pannout nejde, neaplikuj panX (image bude vycentrovaný).
+  // Drženo jako derivovaná hodnota místo setState v useEffect.
+  const appliedPanX = canPanHorizontally ? panX : 0;
+
+  // Rotace výseče - škálovaná podle skutečného přesahu fotky:
+  //   přesah = 0    → výseč se nehýbe
+  //   přesah ≥ 0.5  → plná rotace jako dřív (kalibrace pro "klasické" panorama)
+  // Tím je výseč vždy svázaná s viditelným pohybem fotky.
+  const rotationFactor = Math.min(1, horizontalOverflow / 0.5);
+  const rotation = canPanHorizontally
+    ? currentMarker.defaultRotation -
+      appliedPanX * (currentMarker.rotationSpeed || 4) * rotationFactor
+    : currentMarker.defaultRotation;
 
   // Drag/pan handlery
   const handlePointerDown = useCallback(
     (e) => {
+      if (!canPanHorizontally) return;
       isDragging.current = true;
       dragStartX.current = e.clientX;
       panStartX.current = panX;
       e.currentTarget.setPointerCapture(e.pointerId);
     },
-    [panX],
+    [panX, canPanHorizontally],
   );
 
   const handlePointerMove = useCallback(
     (e) => {
-      if (!isDragging.current || !containerRef.current) return;
+      if (!isDragging.current || !containerRef.current || !canPanHorizontally)
+        return;
       const dx = e.clientX - dragStartX.current;
       const containerWidth = containerRef.current.offsetWidth;
       const pct = (dx / containerWidth) * 40;
@@ -313,7 +449,7 @@ function App() {
       const newPan = Math.max(-limit, Math.min(limit, panStartX.current + pct));
       setPanX(newPan);
     },
-    [isZoomed],
+    [canPanHorizontally],
   );
 
   const handlePointerUp = useCallback(() => {
@@ -324,7 +460,7 @@ function App() {
   const panInterval = useRef(null);
 
   const startPan = (direction) => {
-    if (panInterval.current) return;
+    if (!canPanHorizontally || panInterval.current) return;
     const step = direction === "left" ? 0.4 : -0.4;
     const panStep = () => {
       setPanX((prev) => {
@@ -350,9 +486,9 @@ function App() {
     setIsZoomed(false);
   };
 
-  // Náznak posunu při prvním načtení
+  // Náznak posunu při prvním načtení (pouze když se fotka skutečně dá panovat)
   useEffect(() => {
-    if (hasShownHint.current) return;
+    if (hasShownHint.current || !canPanHorizontally) return;
     hasShownHint.current = true;
     const timer = setTimeout(() => {
       let start = null;
@@ -375,7 +511,7 @@ function App() {
       requestAnimationFrame(animate);
     }, 500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [canPanHorizontally]);
 
   // Přepínání zoomu
   const toggleZoom = (zoomIn) => {
@@ -389,7 +525,8 @@ function App() {
   return (
     <div className="page-wrapper">
       <div className="card">
-        <div className="windmill-switcher">
+        {/* ============ WINDMILL SWITCHER - ZAKOMENTOVÁNO (Drahouš má napevno 3 větrníky) ============ */}
+        {/* <div className="windmill-switcher">
           {WINDMILL_COUNTS.map((count) => (
             <button
               key={count}
@@ -405,7 +542,7 @@ function App() {
               <img src="/vetrnik.webp" alt="" className="windmill-icon" />
             </button>
           ))}
-        </div>
+        </div> */}
         {/* Horní část - prohlížeč obrázků */}
         <div className="div-top">
           <div
@@ -422,11 +559,16 @@ function App() {
               className="viewer-image"
               draggable={false}
               style={{
-                objectPosition: `${50 - panX}% 50%`,
+                objectPosition: `${50 - appliedPanX}% 50%`,
                 transform: isZoomed ? "scale(1.5)" : "scale(1)",
-                transformOrigin: `${50 - panX}% 50%`,
+                transformOrigin: `${50 - appliedPanX}% 50%`,
               }}
             />
+            {isImageLoading && (
+              <div className="image-loader" aria-hidden="true">
+                <div className="spinner" />
+              </div>
+            )}
           </div>
 
           {/* Ikony zoomu - lupičky */}
@@ -538,9 +680,13 @@ function App() {
         </div>
 
         {/* Spodní část - ground view s kolečky */}
-        <div className="div-bottom" ref={mapContainerRef}>
-          {/* Ikony větrníků na mapě - počet dle switche */}
-          {WINDMILLS.map((windmill) => {
+        <div
+          className="div-bottom"
+          ref={mapContainerRef}
+          style={mapBgStyle ?? undefined}
+        >
+          {/* ============ ZAKOMENTOVÁNO - ikony větrníků na mapě (Drahouš má větrníky už zapečené v ground view z Figmy) ============ */}
+          {/* {WINDMILLS.map((windmill) => {
             const pos = toMapPos(windmill.imgLeft, windmill.imgTop);
             return (
               <img
@@ -551,7 +697,7 @@ function App() {
                 style={pos}
               />
             );
-          })}
+          })} */}
 
           {/* Kolečka s čísly */}
           {POSITIONS.map((marker, index) => {
