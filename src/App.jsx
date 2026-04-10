@@ -247,7 +247,7 @@ function useMapContain(containerRef, imageUrl, zoom = 1) {
       }
     : null;
 
-  return { toContainer, bgStyle };
+  return { toContainer, bgStyle, mapWidth: layout?.rw ?? null };
 }
 
 // Komponenta pro kolečko s výsečí - bez transition na mobilu
@@ -305,13 +305,23 @@ function Marker({
 
 function App() {
   const mapContainerRef = useRef(null);
-  // Mapa: contain × MAP_ZOOM (1.0 = klasický contain, >1 = víc přiblížené)
-  const MAP_ZOOM = 1.5;
-  const { toContainer: toMapPos, bgStyle: mapBgStyle } = useMapContain(
-    mapContainerRef,
-    MAP_URL,
-    MAP_ZOOM,
+
+  // Detekce mobilního rozlišení (pro menší zoom na mapě)
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" && window.innerWidth <= 425,
   );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 425px)");
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  // Mapa: contain × MAP_ZOOM (1.0 = klasický contain, >1 = víc přiblížené)
+  // Na mobilu menší zoom aby se vešla celá mapa
+  const MAP_ZOOM = isMobile ? 1.0 : 1.5;
+  const { toContainer: toMapPos, bgStyle: mapBgStyle, mapWidth } =
+    useMapContain(mapContainerRef, MAP_URL, MAP_ZOOM);
 
   // ============ ZAKOMENTOVÁNO - state pro switcher (Krakov) ============
   // const [windmillCount, setWindmillCount] = useState(3);
@@ -324,6 +334,7 @@ function App() {
   const [activeMarker, setActiveMarker] = useState(1);
   const [isZoomed, setIsZoomed] = useState(false);
   const [panX, setPanX] = useState(0); // horizontální posun v procentech
+  const [panY, setPanY] = useState(0); // vertikální posun v procentech
 
   // Aspect ratio aktuálního normal/xray obrázku (pro detekci, jestli se vůbec dá panovat)
   const [normalAspect, setNormalAspect] = useState(null);
@@ -342,7 +353,9 @@ function App() {
   const containerRef = useRef(null);
   const isDragging = useRef(false);
   const dragStartX = useRef(0);
+  const dragStartY = useRef(0);
   const panStartX = useRef(0);
+  const panStartY = useRef(0);
   const hasShownHint = useRef(false);
 
   // Přednačtení obrázků + měření aspect ratio pro aktivní marker
@@ -396,60 +409,92 @@ function App() {
     };
   }, [targetImage, displayImage]);
 
-  // Spočítá, jak moc fotka skutečně přetéká horizontálně (jako podíl šířky kontejneru).
+  // Spočítá, jak moc fotka skutečně přetéká (jako podíl šířky/výšky kontejneru).
   // Bere v úvahu object-fit: cover ZÁROVEŇ s transform: scale (zoom), takže výseč se
   // hýbe přesně tak, jak se hýbe fotka — bez ohledu na velikost obrazovky a režim.
-  const horizontalOverflow = useMemo(() => {
-    if (!currentAspect || !viewerSize) return 0;
+  const { horizontalOverflow, verticalOverflow } = useMemo(() => {
+    if (!currentAspect || !viewerSize)
+      return { horizontalOverflow: 0, verticalOverflow: 0 };
     const { w: cw, h: ch } = viewerSize;
     // Cover mód: image vyplní kratší rozměr, na druhém přetéká
-    let renderedW = currentAspect > cw / ch ? ch * currentAspect : cw;
-    // Zoom (transform: scale 1.5) zvětšuje vizuálně 1.5×
-    if (isZoomed) renderedW *= 1.5;
-    return Math.max(0, (renderedW - cw) / cw);
+    let renderedW, renderedH;
+    if (currentAspect > cw / ch) {
+      // Obrázek "širší" než kontejner → vyplní výšku, přetéká vodorovně
+      renderedH = ch;
+      renderedW = ch * currentAspect;
+    } else {
+      // Obrázek "užší" → vyplní šířku, přetéká vertikálně
+      renderedW = cw;
+      renderedH = cw / currentAspect;
+    }
+    // Zoom (transform: scale 1.5) zvětšuje vizuálně 1.5× v obou osách
+    if (isZoomed) {
+      renderedW *= 1.5;
+      renderedH *= 1.5;
+    }
+    return {
+      horizontalOverflow: Math.max(0, (renderedW - cw) / cw),
+      verticalOverflow: Math.max(0, (renderedH - ch) / ch),
+    };
   }, [currentAspect, viewerSize, isZoomed]);
 
-  // Pannout jde jen pokud je nějaký smysluplný přesah (>2% šířky)
+  // Pannout jde jen pokud je nějaký smysluplný přesah (>2%)
   const canPanHorizontally = horizontalOverflow > 0.02;
+  const canPanVertically = verticalOverflow > 0.02;
 
-  // Když fotka pannout nejde, neaplikuj panX (image bude vycentrovaný).
+  // Když fotka v dané ose pannout nejde, neaplikuj posun (image bude vycentrovaný).
   // Drženo jako derivovaná hodnota místo setState v useEffect.
   const appliedPanX = canPanHorizontally ? panX : 0;
+  const appliedPanY = canPanVertically ? panY : 0;
 
-  // Rotace výseče - škálovaná podle skutečného přesahu fotky:
-  //   přesah = 0    → výseč se nehýbe
-  //   přesah ≥ 0.5  → plná rotace jako dřív (kalibrace pro "klasické" panorama)
-  // Tím je výseč vždy svázaná s viditelným pohybem fotky.
-  const rotationFactor = Math.min(1, horizontalOverflow / 0.5);
+  // Rotace výseče — přímo úměrná skutečnému přesahu fotky.
+  // overflow = 0   → výseč stojí
+  // overflow = 0.3 → výseč se otočí o ~9° při max posunu
+  // overflow = 1.0 → výseč se otočí o ~30° při max posunu
+  // ROTATION_DAMPING řídí celkovou citlivost (0.4 = realistická vazba na pohyb fotky).
+  const ROTATION_DAMPING = 0.4;
   const rotation = canPanHorizontally
     ? currentMarker.defaultRotation -
-      appliedPanX * (currentMarker.rotationSpeed || 4) * rotationFactor
+      appliedPanX *
+        Math.min(horizontalOverflow, 1) *
+        (currentMarker.rotationSpeed || 4) *
+        ROTATION_DAMPING
     : currentMarker.defaultRotation;
 
-  // Drag/pan handlery
+  // Drag/pan handlery (umožní pohyb v ose, kde má fotka přesah)
+  const canPanAny = canPanHorizontally || canPanVertically;
+
   const handlePointerDown = useCallback(
     (e) => {
-      if (!canPanHorizontally) return;
+      if (!canPanAny) return;
       isDragging.current = true;
       dragStartX.current = e.clientX;
+      dragStartY.current = e.clientY;
       panStartX.current = panX;
+      panStartY.current = panY;
       e.currentTarget.setPointerCapture(e.pointerId);
     },
-    [panX, canPanHorizontally],
+    [panX, panY, canPanAny],
   );
 
   const handlePointerMove = useCallback(
     (e) => {
-      if (!isDragging.current || !containerRef.current || !canPanHorizontally)
-        return;
-      const dx = e.clientX - dragStartX.current;
+      if (!isDragging.current || !containerRef.current || !canPanAny) return;
       const containerWidth = containerRef.current.offsetWidth;
-      const pct = (dx / containerWidth) * 40;
+      const containerHeight = containerRef.current.offsetHeight;
       const limit = PAN_LIMIT;
-      const newPan = Math.max(-limit, Math.min(limit, panStartX.current + pct));
-      setPanX(newPan);
+      if (canPanHorizontally) {
+        const dx = e.clientX - dragStartX.current;
+        const pct = (dx / containerWidth) * 40;
+        setPanX(Math.max(-limit, Math.min(limit, panStartX.current + pct)));
+      }
+      if (canPanVertically) {
+        const dy = e.clientY - dragStartY.current;
+        const pct = (dy / containerHeight) * 40;
+        setPanY(Math.max(-limit, Math.min(limit, panStartY.current + pct)));
+      }
     },
-    [canPanHorizontally],
+    [canPanAny, canPanHorizontally, canPanVertically],
   );
 
   const handlePointerUp = useCallback(() => {
@@ -483,6 +528,7 @@ function App() {
   const handleMarkerClick = (id) => {
     setActiveMarker(id);
     setPanX(0);
+    setPanY(0);
     setIsZoomed(false);
   };
 
@@ -524,7 +570,14 @@ function App() {
 
   return (
     <div className="page-wrapper">
-      <div className="card">
+      <div
+        className="card"
+        style={
+          mapWidth && !isMobile
+            ? { maxWidth: mapWidth, margin: "0 auto" }
+            : undefined
+        }
+      >
         {/* ============ WINDMILL SWITCHER - ZAKOMENTOVÁNO (Drahouš má napevno 3 větrníky) ============ */}
         {/* <div className="windmill-switcher">
           {WINDMILL_COUNTS.map((count) => (
@@ -559,9 +612,9 @@ function App() {
               className="viewer-image"
               draggable={false}
               style={{
-                objectPosition: `${50 - appliedPanX}% 50%`,
+                objectPosition: `${50 - appliedPanX}% ${50 - appliedPanY}%`,
                 transform: isZoomed ? "scale(1.5)" : "scale(1)",
-                transformOrigin: `${50 - appliedPanX}% 50%`,
+                transformOrigin: `${50 - appliedPanX}% ${50 - appliedPanY}%`,
               }}
             />
             {isImageLoading && (
