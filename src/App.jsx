@@ -99,7 +99,7 @@ const OBSERVATION_MARKERS = [
     imgLeft: 35,
     defaultRotation: 150,
     rotationSpeed: 3,
-    name: "1. Lokalita 1",
+    name: "1. Drahouš od Hostince",
   },
   {
     id: 2,
@@ -107,7 +107,7 @@ const OBSERVATION_MARKERS = [
     imgLeft: 35,
     defaultRotation: 170,
     rotationSpeed: 3,
-    name: "2. Lokalita 2",
+    name: "2. Drahouš od obecního úřadu",
   },
   {
     id: 3,
@@ -115,7 +115,7 @@ const OBSERVATION_MARKERS = [
     imgLeft: 29,
     defaultRotation: 120,
     rotationSpeed: 3,
-    name: "3. Lokalita 3",
+    name: "3. Tlesky náves",
   },
   {
     id: 4,
@@ -123,7 +123,7 @@ const OBSERVATION_MARKERS = [
     imgLeft: 26,
     defaultRotation: 80,
     rotationSpeed: 3,
-    name: "4. Lokalita 4",
+    name: "4. Ždár náves",
   },
   {
     id: 5,
@@ -131,7 +131,7 @@ const OBSERVATION_MARKERS = [
     imgLeft: 31,
     defaultRotation: 180,
     rotationSpeed: 3,
-    name: "5. Lokalita 5",
+    name: "5. Jesenice náměstí",
   },
   {
     id: 6,
@@ -139,7 +139,7 @@ const OBSERVATION_MARKERS = [
     imgLeft: 57,
     defaultRotation: 210,
     rotationSpeed: 3,
-    name: "6. Lokalita 6",
+    name: "6. Kosobody náves",
   },
   {
     id: 7,
@@ -147,7 +147,7 @@ const OBSERVATION_MARKERS = [
     imgLeft: 75,
     defaultRotation: 320,
     rotationSpeed: 3,
-    name: "7. Lokalita 7",
+    name: "7. Velká Chmelišná náves",
   },
 ];
 
@@ -320,8 +320,11 @@ function App() {
   // Mapa: contain × MAP_ZOOM (1.0 = klasický contain, >1 = víc přiblížené)
   // Na mobilu menší zoom aby se vešla celá mapa
   const MAP_ZOOM = isMobile ? 1.0 : 1.5;
-  const { toContainer: toMapPos, bgStyle: mapBgStyle, mapWidth } =
-    useMapContain(mapContainerRef, MAP_URL, MAP_ZOOM);
+  const {
+    toContainer: toMapPos,
+    bgStyle: mapBgStyle,
+    mapWidth,
+  } = useMapContain(mapContainerRef, MAP_URL, MAP_ZOOM);
 
   // ============ ZAKOMENTOVÁNO - state pro switcher (Krakov) ============
   // const [windmillCount, setWindmillCount] = useState(3);
@@ -342,8 +345,8 @@ function App() {
   // Velikost prohlížeče (pro detekci canPan)
   const [viewerSize, setViewerSize] = useState(null);
 
-  // Limit posunu - stejný pro obě úrovně zoomu
-  const PAN_LIMIT = 25;
+  // Limit posunu - 50 = plný rozsah objectPosition 0–100%
+  const PAN_LIMIT = 50;
 
   // Získání aktuálního markeru pro zobrazení názvu
   const currentMarker =
@@ -485,12 +488,12 @@ function App() {
       const limit = PAN_LIMIT;
       if (canPanHorizontally) {
         const dx = e.clientX - dragStartX.current;
-        const pct = (dx / containerWidth) * 40;
+        const pct = (dx / containerWidth) * 80;
         setPanX(Math.max(-limit, Math.min(limit, panStartX.current + pct)));
       }
       if (canPanVertically) {
         const dy = e.clientY - dragStartY.current;
-        const pct = (dy / containerHeight) * 40;
+        const pct = (dy / containerHeight) * 80;
         setPanY(Math.max(-limit, Math.min(limit, panStartY.current + pct)));
       }
     },
@@ -506,7 +509,7 @@ function App() {
 
   const startPan = (direction) => {
     if (!canPanHorizontally || panInterval.current) return;
-    const step = direction === "left" ? 0.4 : -0.4;
+    const step = direction === "left" ? 0.8 : -0.8;
     const panStep = () => {
       setPanX((prev) => {
         const limit = PAN_LIMIT;
