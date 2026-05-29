@@ -1,12 +1,173 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import "./App.css";
 
-const BASE_URL = "https://noho.b-cdn.net/vizualizace%20fotky";
+// ============ KONFIGURACE LOKALIT ============
+// Každá lokalita = jeden iframe. Liší se jen fotkami, mapou a pozicemi koleček.
+// Výběr přes URL parametr ?loc=<klic>, např. ...vercel.app/?loc=drahous
+// Zbytek appky (viewer, drag, zoom, výseče) je sdílený.
+const LOCATIONS = {
+  drahous: {
+    baseUrl: "https://noho.b-cdn.net/vizualizace%20fotky/drahous",
+    photoPattern: { normal: "panorama", xray: "prekazka" },
+    mapUrl:
+      "https://noho.b-cdn.net/vizualizace%20fotky/drahous/groundView_drahous.webp",
+    mapZoom: 1.5, // přiblížení mapy na desktopu (mobil vždy 1.0)
+    // Pozorovatelny - souřadnice v % obrázku mapy
+    markers: [
+      {
+        id: 1,
+        imgTop: 47,
+        imgLeft: 35,
+        defaultRotation: 150,
+        rotationSpeed: 3,
+        name: "1. Drahouš od Hostince",
+      },
+      {
+        id: 2,
+        imgTop: 42,
+        imgLeft: 35,
+        defaultRotation: 170,
+        rotationSpeed: 3,
+        name: "2. Drahouš od obecního úřadu",
+      },
+      {
+        id: 3,
+        imgTop: 54,
+        imgLeft: 29,
+        defaultRotation: 120,
+        rotationSpeed: 3,
+        name: "3. Tlesky náves",
+      },
+      {
+        id: 4,
+        imgTop: 75,
+        imgLeft: 26,
+        defaultRotation: 80,
+        rotationSpeed: 3,
+        name: "4. Ždár náves",
+      },
+      {
+        id: 5,
+        imgTop: 25,
+        imgLeft: 31,
+        defaultRotation: 180,
+        rotationSpeed: 3,
+        name: "5. Jesenice náměstí",
+      },
+      {
+        id: 6,
+        imgTop: 24,
+        imgLeft: 57,
+        defaultRotation: 210,
+        rotationSpeed: 3,
+        name: "6. Kosobody náves",
+      },
+      {
+        id: 7,
+        imgTop: 67,
+        imgLeft: 75,
+        defaultRotation: 320,
+        rotationSpeed: 3,
+        name: "7. Velká Chmelišná náves",
+      },
+    ],
+  },
 
-// Generování URL pro fotky - Drahouš
-const getPhotoUrls = (id) => ({
-  normal: `${BASE_URL}/panorama_${id}.webp`,
-  xray: `${BASE_URL}/prekazka_${id}.webp`,
+  // ============ BYSTRÁ NAD JIZEROU - VTE, 6 POHLEDŮ ============
+  // defaultRotation = azimut pohledu ke Skalici (°) z docx; výseč míří k větrníkům.
+  // mapZoom 1.0 = celá mapa (stanoviště jsou rozprostřená po celém území).
+  // POZICE markerů (imgTop/imgLeft) jsou odhad z ortofota — doladit vizuálně v appce.
+  bystra: {
+    baseUrl: "https://noho.b-cdn.net/vizualizace%20fotky/bystra",
+    photoPattern: { normal: "panorama", xray: "prekazka" },
+    mapUrl:
+      "https://noho.b-cdn.net/vizualizace%20fotky/bystra/groundView_bystra.webp",
+    mapZoom: 1.0,
+    markers: [
+      {
+        id: 1,
+        photo: 28,
+        imgTop: 75,
+        imgLeft: 45,
+        defaultRotation:35,
+        rotationSpeed: 3,
+        name: "1. Košťálov – výhled nad Košťálovem",
+      },
+      {
+        id: 2,
+        photo: 18,
+        imgTop: 47,
+        imgLeft: 51,
+        defaultRotation: 45,
+        rotationSpeed: 3,
+        name: "2. Valdice – pohled od kříže",
+      },
+      {
+        id: 3,
+        photo: 47,
+        imgTop: 55,
+        imgLeft: 5,
+        defaultRotation: 94,
+        rotationSpeed: 3,
+        name: "3. Slaná – pohled od hřbitova",
+      },
+      {
+        id: 4,
+        photo: 54,
+        imgTop: 7,
+        imgLeft: 25,
+        defaultRotation: 145,
+        rotationSpeed: 3,
+        name: "4. Benešov u Semil – benešovský vysílač",
+      },
+      {
+        id: 5,
+        photo: 38,
+        imgTop: 6,
+        imgLeft: 59,
+        defaultRotation: 195,
+        rotationSpeed: 3,
+        name: "5. Háje nad Jizerou – od RD čp. 10",
+      },
+      {
+        id: 6,
+        photo: 14,
+        imgTop: 23,
+        imgLeft: 95,
+        defaultRotation: 290,
+        rotationSpeed: 3,
+        name: "6. Mříčná – od kostela sv. Kateřiny",
+      },
+    ],
+  },
+
+  // ============ ŠABLONA PRO NOVOU LOKALITU ============
+  // Zkopíruj blok výše, přejmenuj klíč a doplň reálná data:
+  //   baseUrl       - složka s fotkami na CDN (bunny.net)
+  //   photoPattern  - prefixy názvů fotek; výsledek: <baseUrl>/<normal>_<id>.webp
+  //   mapUrl        - ground view mapa
+  //   mapZoom       - přiblížení mapy na desktopu (1.0 = celá, >1 = přiblížené)
+  //   markers       - pozice koleček (imgTop/imgLeft v %), defaultRotation, name;
+  //                   volitelně photo = identifikátor souboru (jinak se použije id)
+  // novalokalita: { baseUrl: "...", photoPattern: { normal: "panorama", xray: "prekazka" }, mapUrl: "...", mapZoom: 1.0, markers: [ ... ] },
+};
+
+const DEFAULT_LOCATION = "drahous";
+
+// Vybere config podle ?loc= v URL; neznámá/chybějící lokalita → default.
+function getLocationConfig() {
+  const loc =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("loc")
+      : null;
+  return LOCATIONS[loc] || LOCATIONS[DEFAULT_LOCATION];
+}
+
+// Generování URL pro fotky dané lokality.
+// `photo` = identifikátor souboru (u Bystré číslo Foto z tabulky, u Drahouše = id markeru).
+const getPhotoUrls = (config, photo) => ({
+  normal: `${config.baseUrl}/${config.photoPattern.normal}_${photo}.webp`,
+  xray: `${config.baseUrl}/${config.photoPattern.xray}_${photo}.webp`,
 });
 // ============ STARÁ VERZE - ZAKOMENTOVÁNO ============
 // const MARKER_CONFIGS = {
@@ -54,11 +215,6 @@ const getPhotoUrls = (id) => ({
 //   },
 // };
 
-// ============ DRAHOUŠ - 3 VĚTRNÍKY, 7 POHLEDŮ ============
-// URL obrázku mapy
-const MAP_URL =
-  "https://noho.b-cdn.net/vizualizace%20fotky/groundView_drahous.webp";
-
 // ============ ZAKOMENTOVÁNO - pozice větrníků (Drahouš má větrníky zapečené v ground view) ============
 // const WINDMILLS = [
 //   { id: 1, imgTop: 50, imgLeft: 43 },
@@ -89,67 +245,6 @@ const MAP_URL =
 //   ],
 // };
 // const WINDMILL_COUNTS = [3, 4, 5];
-
-// 7 pozorovatelen - souřadnice v % obrázku
-// TODO: doladit přesné pozice + jména po nahrání fotek na bunny.net
-const OBSERVATION_MARKERS = [
-  {
-    id: 1,
-    imgTop: 47,
-    imgLeft: 35,
-    defaultRotation: 150,
-    rotationSpeed: 3,
-    name: "1. Drahouš od Hostince",
-  },
-  {
-    id: 2,
-    imgTop: 42,
-    imgLeft: 35,
-    defaultRotation: 170,
-    rotationSpeed: 3,
-    name: "2. Drahouš od obecního úřadu",
-  },
-  {
-    id: 3,
-    imgTop: 54,
-    imgLeft: 29,
-    defaultRotation: 120,
-    rotationSpeed: 3,
-    name: "3. Tlesky náves",
-  },
-  {
-    id: 4,
-    imgTop: 75,
-    imgLeft: 26,
-    defaultRotation: 80,
-    rotationSpeed: 3,
-    name: "4. Ždár náves",
-  },
-  {
-    id: 5,
-    imgTop: 25,
-    imgLeft: 31,
-    defaultRotation: 180,
-    rotationSpeed: 3,
-    name: "5. Jesenice náměstí",
-  },
-  {
-    id: 6,
-    imgTop: 24,
-    imgLeft: 57,
-    defaultRotation: 210,
-    rotationSpeed: 3,
-    name: "6. Kosobody náves",
-  },
-  {
-    id: 7,
-    imgTop: 67,
-    imgLeft: 75,
-    defaultRotation: 320,
-    rotationSpeed: 3,
-    name: "7. Velká Chmelišná náves",
-  },
-];
 
 // ============ ZAKOMENTOVÁNO - hook pro detekci mobilu (zatím nepoužitý) ============
 // function useIsMobile(breakpoint = 425) {
@@ -304,6 +399,9 @@ function Marker({
 }
 
 function App() {
+  // Config lokality podle ?loc= v URL (vybere se jednou při načtení)
+  const config = useMemo(() => getLocationConfig(), []);
+
   const mapContainerRef = useRef(null);
 
   // Detekce mobilního rozlišení (pro menší zoom na mapě)
@@ -319,19 +417,19 @@ function App() {
 
   // Mapa: contain × MAP_ZOOM (1.0 = klasický contain, >1 = víc přiblížené)
   // Na mobilu menší zoom aby se vešla celá mapa
-  const MAP_ZOOM = isMobile ? 1.0 : 1.5;
+  const MAP_ZOOM = isMobile ? 1.0 : (config.mapZoom ?? 1.5);
   const {
     toContainer: toMapPos,
     bgStyle: mapBgStyle,
     mapWidth,
-  } = useMapContain(mapContainerRef, MAP_URL, MAP_ZOOM);
+  } = useMapContain(mapContainerRef, config.mapUrl, MAP_ZOOM);
 
   // ============ ZAKOMENTOVÁNO - state pro switcher (Krakov) ============
   // const [windmillCount, setWindmillCount] = useState(3);
   // const WINDMILLS_DYNAMIC = WINDMILL_POSITIONS[windmillCount];
 
   // Pozorovatelny
-  const POSITIONS = OBSERVATION_MARKERS;
+  const POSITIONS = config.markers;
 
   const [xrayMode, setXrayMode] = useState(false);
   const [activeMarker, setActiveMarker] = useState(1);
@@ -351,6 +449,8 @@ function App() {
   // Získání aktuálního markeru pro zobrazení názvu
   const currentMarker =
     POSITIONS.find((p) => p.id === activeMarker) || POSITIONS[0];
+  // Identifikátor fotky (photo má přednost, jinak id markeru)
+  const currentPhoto = currentMarker.photo ?? currentMarker.id;
 
   // Reference pro drag
   const containerRef = useRef(null);
@@ -363,7 +463,7 @@ function App() {
 
   // Přednačtení obrázků + měření aspect ratio pro aktivní marker
   useEffect(() => {
-    const urls = getPhotoUrls(activeMarker);
+    const urls = getPhotoUrls(config, currentPhoto);
     const normalImg = new Image();
     const xrayImg = new Image();
     normalImg.onload = () =>
@@ -372,7 +472,7 @@ function App() {
       setXrayAspect(xrayImg.naturalWidth / xrayImg.naturalHeight);
     normalImg.src = urls.normal;
     xrayImg.src = urls.xray;
-  }, [activeMarker]);
+  }, [config, currentPhoto]);
 
   // Sledovat velikost prohlížeče
   useEffect(() => {
@@ -388,7 +488,7 @@ function App() {
   }, []);
 
   // Cílová URL fotky (může být ještě nenahraná)
-  const currentUrls = getPhotoUrls(activeMarker);
+  const currentUrls = getPhotoUrls(config, currentPhoto);
   const targetImage = xrayMode ? currentUrls.xray : currentUrls.normal;
   const currentAspect = xrayMode ? xrayAspect : normalAspect;
 
@@ -739,7 +839,10 @@ function App() {
         <div
           className="div-bottom"
           ref={mapContainerRef}
-          style={mapBgStyle ?? undefined}
+          style={{
+            backgroundImage: `url("${config.mapUrl}")`,
+            ...(mapBgStyle ?? {}),
+          }}
         >
           {/* ============ ZAKOMENTOVÁNO - ikony větrníků na mapě (Drahouš má větrníky už zapečené v ground view z Figmy) ============ */}
           {/* {WINDMILLS.map((windmill) => {

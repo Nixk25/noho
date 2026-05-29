@@ -77,7 +77,7 @@ body {
   position: relative;
   z-index: 1;
   background-color: #efeae2; /* match bg webu pro letterbox kolem mapy */
-  background-image: url("https://noho.b-cdn.net/vizualizace%20fotky/groundView_drahous.webp");
+  /* background-image se nastavuje inline z config.mapUrl (per lokalita) */
   background-size: contain; /* ZMĚNA: contain místo cover, aby byla vidět celá mapa a všechny body */
   background-position: center;
   background-repeat: no-repeat; /* aby se nedělala "tapeta" v prázdných okrajích */
