@@ -342,7 +342,7 @@ function useMapContain(containerRef, imageUrl, zoom = 1) {
       }
     : null;
 
-  return { toContainer, bgStyle, mapWidth: layout?.rw ?? null };
+  return { toContainer, bgStyle, mapWidth: layout?.rw ?? null, imgRatio };
 }
 
 // Komponenta pro kolečko s výsečí - bez transition na mobilu
@@ -404,12 +404,13 @@ function App() {
 
   const mapContainerRef = useRef(null);
 
-  // Detekce mobilního rozlišení (pro menší zoom na mapě)
+  // Detekce mobilního rozlišení (pro menší zoom na mapě).
+  // 768px = telefony i menší tablety dostanou mobilní layout (musí sedět s media query v App.css).
   const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" && window.innerWidth <= 425,
+    typeof window !== "undefined" && window.innerWidth <= 768,
   );
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 425px)");
+    const mq = window.matchMedia("(max-width: 768px)");
     const handler = (e) => setIsMobile(e.matches);
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
@@ -417,11 +418,15 @@ function App() {
 
   // Mapa: contain × MAP_ZOOM (1.0 = klasický contain, >1 = víc přiblížené)
   // Na mobilu menší zoom aby se vešla celá mapa
-  const MAP_ZOOM = isMobile ? 1.0 : (config.mapZoom ?? 1.5);
+  // Zoom mapy z configu (per lokalita). Drahouš má kolečka nahloučená → 1.5;
+  // Bystrá je má rozprostřená po celé mapě → 1.0 (jinak by se krajní body ořízly).
+  // Platí pro desktop i mobil, ať je mapa všude stejně čitelná.
+  const MAP_ZOOM = config.mapZoom ?? 1.5;
   const {
     toContainer: toMapPos,
     bgStyle: mapBgStyle,
     mapWidth,
+    imgRatio: mapRatio,
   } = useMapContain(mapContainerRef, config.mapUrl, MAP_ZOOM);
 
   // ============ ZAKOMENTOVÁNO - state pro switcher (Krakov) ============
@@ -841,6 +846,11 @@ function App() {
           ref={mapContainerRef}
           style={{
             backgroundImage: `url("${config.mapUrl}")`,
+            // Na mobilu dostane plocha přesný poměr mapy → vyplní šířku bez béžových okrajů
+            // a nevznikne mezera mezi fotkou a mapou. Výšku dopočítá flexbox (div-top vyplní zbytek).
+            ...(isMobile && mapRatio
+              ? { height: "auto", aspectRatio: String(mapRatio) }
+              : {}),
             ...(mapBgStyle ?? {}),
           }}
         >
