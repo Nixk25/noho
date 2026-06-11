@@ -87,7 +87,7 @@ const LOCATIONS = {
       {
         id: 1,
         photo: 28,
-        imgTop: 75,
+        imgTop: 65,
         imgLeft: 45,
         defaultRotation:35,
         rotationSpeed: 3,
@@ -96,7 +96,7 @@ const LOCATIONS = {
       {
         id: 2,
         photo: 18,
-        imgTop: 47,
+        imgTop: 38,
         imgLeft: 51,
         defaultRotation: 45,
         rotationSpeed: 3,
@@ -105,7 +105,7 @@ const LOCATIONS = {
       {
         id: 3,
         photo: 47,
-        imgTop: 55,
+        imgTop: 45,
         imgLeft: 5,
         defaultRotation: 94,
         rotationSpeed: 3,
@@ -118,7 +118,7 @@ const LOCATIONS = {
         imgLeft: 25,
         defaultRotation: 145,
         rotationSpeed: 3,
-        name: "4. Benešov u Semil – benešovský vysílač",
+        name: "4. Benešov u Semil",
       },
       {
         id: 5,
@@ -127,12 +127,12 @@ const LOCATIONS = {
         imgLeft: 59,
         defaultRotation: 195,
         rotationSpeed: 3,
-        name: "5. Háje nad Jizerou – od RD čp. 10",
+        name: "5. Háje nad Jizerou",
       },
       {
         id: 6,
         photo: 14,
-        imgTop: 23,
+        imgTop: 15,
         imgLeft: 95,
         defaultRotation: 290,
         rotationSpeed: 3,
