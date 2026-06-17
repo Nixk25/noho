@@ -153,10 +153,10 @@ const LOCATIONS = {
       "https://noho.b-cdn.net/vizualizace%20fotky/vojtechov/groundView_vojtechovv3.webp",
     mapZoom: 1.0,
     markers: [
-      { id: 1, photo: 1, imgTop: 64, imgLeft: 38, defaultRotation: 47, rotationSpeed: 3, name: "1. Vítanov" },
+      { id: 1, photo: 1, imgTop: 64, imgLeft: 38, defaultRotation: 47, rotationSpeed: 3, singlePhoto: true, name: "1. Vítanov" },
       { id: 2, photo: 2, imgTop: 66, imgLeft: 57, defaultRotation: 356, rotationSpeed: 3, name: "2. Kameničky" },
-      { id: 3, photo: 3, imgTop: 91, imgLeft: 77, defaultRotation: 330, rotationSpeed: 3, name: "3. Křižánky" },
-      { id: 4, photo: 4, imgTop: 76, imgLeft: 83, defaultRotation: 315, rotationSpeed: 3, name: "4. Pustá Kamenice" },
+      { id: 3, photo: 3, imgTop: 91, imgLeft: 77, defaultRotation: 330, rotationSpeed: 3, singlePhoto: true, name: "3. Křižánky" },
+      { id: 4, photo: 4, imgTop: 76, imgLeft: 83, defaultRotation: 315, rotationSpeed: 3, singlePhoto: true, name: "4. Pustá Kamenice" },
       { id: 5, photo: 5, imgTop: 75, imgLeft: 93, defaultRotation: 307, rotationSpeed: 3, name: "5. Borová" },
       { id: 7, photo: 7, imgTop: 54, imgLeft: 54, defaultRotation: 12, rotationSpeed: 3, name: "6. Jeníkov" },
       { id: 8, photo: 8, imgTop: 65, imgLeft: 65, defaultRotation: 338, rotationSpeed: 3, name: "7. Svratouch" },
@@ -851,17 +851,20 @@ function App() {
           <img src={currentUrls.normal} alt="" className="preload-image" />
           <img src={currentUrls.xray} alt="" className="preload-image" />
 
-          <div className="labels-overlay">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={xrayMode}
-                onChange={(e) => setXrayMode(e.target.checked)}
-              />
-              <span className="checkbox-toggle" />
-              <span>Pohled skrz překážky</span>
-            </label>
-          </div>
+          {/* Přepínač skrytý u bodů s jedinou fotkou (nepozorovatelné) - nemá co přepínat */}
+          {!currentMarker.singlePhoto && (
+            <div className="labels-overlay">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={xrayMode}
+                  onChange={(e) => setXrayMode(e.target.checked)}
+                />
+                <span className="checkbox-toggle" />
+                <span>Pohled skrz překážky</span>
+              </label>
+            </div>
+          )}
 
           <span className="bottom-label">{currentMarker.name}</span>
         </div>
