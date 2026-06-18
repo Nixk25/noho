@@ -751,7 +751,7 @@ function App() {
       <div
         className="card"
         style={
-          mapWidth && !isMobile && !config.is360
+          mapWidth && !isMobile
             ? { maxWidth: mapWidth, margin: "0 auto" }
             : undefined
         }
