@@ -1,5 +1,21 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  lazy,
+  Suspense,
+} from "react";
 import "./App.css";
+import "@photo-sphere-viewer/core/index.css";
+
+// 360° prohlížeč (equirektangulární) - lazy, ať nezvětšuje bundle plochým lokalitám
+const ReactPhotoSphereViewer = lazy(() =>
+  import("react-photo-sphere-viewer").then((m) => ({
+    default: m.ReactPhotoSphereViewer,
+  })),
+);
 
 // ============ KONFIGURACE LOKALIT ============
 // Každá lokalita = jeden iframe. Liší se jen fotkami, mapou a pozicemi koleček.
@@ -164,6 +180,27 @@ const LOCATIONS = {
       { id: 11, photo: 11, imgTop: 39, imgLeft: 18, defaultRotation: 120, rotationSpeed: 3, name: "9. Trhová Kamenice" },
       { id: 12, photo: 12, imgTop: 4, imgLeft: 14, defaultRotation: 140, rotationSpeed: 3, name: "10. Nasavrky" },
       { id: 13, photo: 13, imgTop: 19, imgLeft: 36, defaultRotation: 186, rotationSpeed: 3, name: "11. Včelákov" },
+    ],
+  },
+
+  // ============ ANENSKÁ STUDÁNKA - VTE, 3 POHLEDY (360° equirektangulární) ============
+  // is360: true → horní část používá ReactPhotoSphereViewer (skutečné 360°), ne plochý viewer.
+  // Fotky 8192×4096 (2:1), jedna na lokaci → singlePhoto (přepínač skrytý u všech).
+  // defaultRotation = azimut k těžišti turbín (VA1/VA2 sever + VB1/VB2 jih), spočítaný z GPS.
+  // POZICE markerů jsou PŘIBLIŽNÉ (placeholder) — doladit podle mapy, až bude.
+  anenska: {
+    is360: true,
+    baseUrl: "https://noho.b-cdn.net/vizualizace%20fotky/anenska%20studanka",
+    // jen jedna fotka na lokaci → xray = normal (žádné prekazka_N, vyhne se 404)
+    photoPattern: { normal: "panorama", xray: "panorama" },
+    mapUrl:
+      "https://noho.b-cdn.net/vizualizace%20fotky/anenska%20studanka/ground_view_anenska.webp",
+    mapZoom: 1.0,
+    // pozice z detekce zapečených špendlíků na mapě; doladit ručně
+    markers: [
+      { id: 1, photo: 1, imgTop: 68, imgLeft: 59, defaultRotation: 174, rotationSpeed: 3, singlePhoto: true, name: "Jižní lokalita" },
+      { id: 2, photo: 2, imgTop: 56, imgLeft: 47, defaultRotation: 7, rotationSpeed: 3, singlePhoto: true, name: "Obě lokality + spínačka" },
+      { id: 3, photo: 3, imgTop: 13, imgLeft: 42, defaultRotation: 158, rotationSpeed: 3, singlePhoto: true, name: "Severní lokalita" },
     ],
   },
 
@@ -464,6 +501,8 @@ function App() {
 
   const [xrayMode, setXrayMode] = useState(false);
   const [activeMarker, setActiveMarker] = useState(1);
+  // Yaw 360° prohlížeče ve stupních (kam se uživatel dívá) - řídí rotaci výseče u is360
+  const [yaw360, setYaw360] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [panX, setPanX] = useState(0); // horizontální posun v procentech
   const [panY, setPanY] = useState(0); // vertikální posun v procentech
@@ -587,13 +626,17 @@ function App() {
   // overflow = 1.0 → výseč se otočí o ~30° při max posunu
   // ROTATION_DAMPING řídí celkovou citlivost (0.4 = realistická vazba na pohyb fotky).
   const ROTATION_DAMPING = 0.4;
-  const rotation = canPanHorizontally
-    ? currentMarker.defaultRotation -
-      appliedPanX *
-        Math.min(horizontalOverflow, 1) *
-        (currentMarker.rotationSpeed || 4) *
-        ROTATION_DAMPING
-    : currentMarker.defaultRotation;
+  // U 360° viewer se výseč otáčí podle yaw (kam se uživatel dívá);
+  // defaultRotation = směr k turbínám při výchozím pohledu (yaw 0).
+  const rotation = config.is360
+    ? currentMarker.defaultRotation + yaw360
+    : canPanHorizontally
+      ? currentMarker.defaultRotation -
+        appliedPanX *
+          Math.min(horizontalOverflow, 1) *
+          (currentMarker.rotationSpeed || 4) *
+          ROTATION_DAMPING
+      : currentMarker.defaultRotation;
 
   // Drag/pan handlery (umožní pohyb v ose, kde má fotka přesah)
   const canPanAny = canPanHorizontally || canPanVertically;
@@ -663,6 +706,7 @@ function App() {
     setActiveMarker(id);
     setPanX(0);
     setPanY(0);
+    setYaw360(0);
     setIsZoomed(false);
   };
 
@@ -707,7 +751,7 @@ function App() {
       <div
         className="card"
         style={
-          mapWidth && !isMobile
+          mapWidth && !isMobile && !config.is360
             ? { maxWidth: mapWidth, margin: "0 auto" }
             : undefined
         }
@@ -732,10 +776,31 @@ function App() {
         </div> */}
         {/* Horní část - prohlížeč obrázků */}
         <div className="div-top">
-          <div
-            ref={containerRef}
-            className="image-viewer"
-            onPointerDown={handlePointerDown}
+          {config.is360 ? (
+            <Suspense
+              fallback={
+                <div className="image-loader" aria-hidden="true">
+                  <div className="spinner" />
+                </div>
+              }
+            >
+              <ReactPhotoSphereViewer
+                key={displayImage}
+                src={displayImage}
+                height="100%"
+                width="100%"
+                navbar={false}
+                onPositionChange={(_lat, lng) =>
+                  setYaw360((lng * 180) / Math.PI)
+                }
+              />
+            </Suspense>
+          ) : (
+            <>
+              <div
+                ref={containerRef}
+                className="image-viewer"
+                onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
@@ -847,9 +912,11 @@ function App() {
             </svg>
           </button>
 
-          {/* Skryté přednačtené obrázky */}
-          <img src={currentUrls.normal} alt="" className="preload-image" />
-          <img src={currentUrls.xray} alt="" className="preload-image" />
+              {/* Skryté přednačtené obrázky */}
+              <img src={currentUrls.normal} alt="" className="preload-image" />
+              <img src={currentUrls.xray} alt="" className="preload-image" />
+            </>
+          )}
 
           {/* Přepínač skrytý u bodů s jedinou fotkou (nepozorovatelné) - nemá co přepínat */}
           {!currentMarker.singlePhoto && (
