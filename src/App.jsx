@@ -176,10 +176,9 @@ const LOCATIONS = {
       { id: 5, photo: 5, imgTop: 75, imgLeft: 93, defaultRotation: 307, rotationSpeed: 3, name: "5. Borová" },
       { id: 7, photo: 7, imgTop: 54, imgLeft: 54, defaultRotation: 12, rotationSpeed: 3, name: "6. Jeníkov" },
       { id: 8, photo: 8, imgTop: 65, imgLeft: 65, defaultRotation: 338, rotationSpeed: 3, name: "7. Svratouch" },
-      { id: 9, photo: 9, imgTop: 44, imgLeft: 63, defaultRotation: 324, rotationSpeed: 3, name: "8. silnice I/34 (Krouna)" },
-      { id: 11, photo: 11, imgTop: 39, imgLeft: 18, defaultRotation: 120, rotationSpeed: 3, name: "9. Trhová Kamenice" },
-      { id: 12, photo: 12, imgTop: 4, imgLeft: 14, defaultRotation: 140, rotationSpeed: 3, name: "10. Nasavrky" },
-      { id: 13, photo: 13, imgTop: 19, imgLeft: 36, defaultRotation: 186, rotationSpeed: 3, name: "11. Včelákov" },
+      { id: 11, photo: 11, imgTop: 39, imgLeft: 18, defaultRotation: 120, rotationSpeed: 3, name: "8. Trhová Kamenice" },
+      { id: 12, photo: 12, imgTop: 4, imgLeft: 14, defaultRotation: 140, rotationSpeed: 3, name: "9. Nasavrky" },
+      { id: 13, photo: 13, imgTop: 19, imgLeft: 36, defaultRotation: 186, rotationSpeed: 3, name: "10. Včelákov" },
     ],
   },
 
