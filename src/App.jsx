@@ -193,7 +193,7 @@ const LOCATIONS = {
     photoExt: "avif",
     photoPattern: { normal: "pohled{n}BEZ", xray: "pohled{n}SKRZ" },
     mapUrl:
-      "https://noho.b-cdn.net/vizualizace%20fotky/vojtechov%20old/mapa_podklad.webp",
+      "https://noho.b-cdn.net/vizualizace%20fotky/vojtechov%20old/mapa_podkladv2.webp",
     mapZoom: 1.0,
     markers: [
       { id: 1, photo: 1, imgTop: 32, imgLeft: 20.5, defaultRotation: 132, rotationSpeed: 3, name: "1. Pohled 1" },
