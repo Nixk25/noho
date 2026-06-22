@@ -182,6 +182,29 @@ const LOCATIONS = {
     ],
   },
 
+
+  // ============ VOJTĚCHOV (STARÁ SADA) - VTE, 6 POHLEDŮ ============
+  // Fotky ve formátu pohled<N>BEZ.avif (normal) a pohled<N>SKRZ.avif (skrz překážky).
+  // Každý pohled má obě varianty → přepínač "Pohled skrz překážky" viditelný u všech.
+  // POZICE markerů (imgTop/imgLeft) a defaultRotation jsou PLACEHOLDER — doladit vizuálně v appce.
+  // NÁZVY pohledů jsou placeholder — přepsat podle reálných lokalit.
+  vojtechovv2: {
+    baseUrl: "https://noho.b-cdn.net/vizualizace%20fotky/vojtechov%20old",
+    photoExt: "avif",
+    photoPattern: { normal: "pohled{n}BEZ", xray: "pohled{n}SKRZ" },
+    mapUrl:
+      "https://noho.b-cdn.net/vizualizace%20fotky/vojtechov%20old/mapa_podklad.webp",
+    mapZoom: 1.0,
+    markers: [
+      { id: 1, photo: 1, imgTop: 32, imgLeft: 20.5, defaultRotation: 132, rotationSpeed: 3, name: "1. Pohled 1" },
+      { id: 2, photo: 2, imgTop: 34, imgLeft: 26, defaultRotation: 126, rotationSpeed: 3, name: "2. Pohled 2" },
+      { id: 3, photo: 3, imgTop: 28, imgLeft: 23, defaultRotation: 122, rotationSpeed: 3, name: "3. Pohled 3" },
+      { id: 4, photo: 4, imgTop: 68, imgLeft: 38, defaultRotation: 80, rotationSpeed: 3, name: "4. Pohled 4" },
+      { id: 5, photo: 5, imgTop: 55, imgLeft: 4, defaultRotation: 100, rotationSpeed: 3, name: "5. Pohled 5" },
+      { id: 6, photo: 6, imgTop: 22, imgLeft: 54.5, defaultRotation: 140, rotationSpeed: 3, name: "6. Pohled 6" },
+    ],
+  },
+
   // ============ ANENSKÁ STUDÁNKA - VTE, 3 POHLEDY (360° equirektangulární) ============
   // is360: true → horní část používá ReactPhotoSphereViewer (skutečné 360°), ne plochý viewer.
   // Fotky 8192×4096 (2:1), jedna na lokaci → singlePhoto (přepínač skrytý u všech).
@@ -227,10 +250,22 @@ function getLocationConfig() {
 
 // Generování URL pro fotky dané lokality.
 // `photo` = identifikátor souboru (u Bystré číslo Foto z tabulky, u Drahouše = id markeru).
-const getPhotoUrls = (config, photo) => ({
-  normal: `${config.baseUrl}/${config.photoPattern.normal}_${photo}.webp`,
-  xray: `${config.baseUrl}/${config.photoPattern.xray}_${photo}.webp`,
-});
+// Dvě varianty pojmenování:
+//   - klasická: `<prefix>_<photo>.<ext>`  → photoPattern: { normal: "panorama", xray: "prekazka" }
+//   - s tokenem {n}: prefix obsahuje `{n}` na místě čísla → `pohled1BEZ.avif`
+//     photoPattern: { normal: "pohled{n}BEZ", xray: "pohled{n}SKRZ" }
+// Přípona je `webp`, pokud config neurčí jinak přes `photoExt` (např. "avif").
+const getPhotoUrls = (config, photo) => {
+  const ext = config.photoExt || "webp";
+  const build = (pattern) =>
+    pattern.includes("{n}")
+      ? `${config.baseUrl}/${pattern.replace("{n}", photo)}.${ext}`
+      : `${config.baseUrl}/${pattern}_${photo}.${ext}`;
+  return {
+    normal: build(config.photoPattern.normal),
+    xray: build(config.photoPattern.xray),
+  };
+};
 // ============ STARÁ VERZE - ZAKOMENTOVÁNO ============
 // const MARKER_CONFIGS = {
 //   3: {
