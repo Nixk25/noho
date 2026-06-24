@@ -174,7 +174,7 @@ const LOCATIONS = {
       { id: 3, photo: 3, imgTop: 91, imgLeft: 74, defaultRotation: 330, rotationSpeed: 3, singlePhoto: true, name: "3. Křižánky" },
       { id: 4, photo: 4, imgTop: 76, imgLeft: 79, defaultRotation: 315, rotationSpeed: 3, singlePhoto: true, name: "4. Pustá Kamenice" },
       { id: 5, photo: 5, imgTop: 76, imgLeft: 88, defaultRotation: 307, rotationSpeed: 3, name: "5. Borová" },
-      { id: 7, photo: 7, imgTop: 55, imgLeft: 51, defaultRotation: 12, rotationSpeed: 3, name: "6. Jeníkov" },
+      { id: 7, photo: 7, imgTop: 55, imgLeft: 51, defaultRotation: 12, rotationSpeed: 3, name: "6. Filipov" },
       { id: 8, photo: 8, imgTop: 65, imgLeft: 62, defaultRotation: 338, rotationSpeed: 3, name: "7. Svratouch" },
       { id: 11, photo: 11, imgTop: 39, imgLeft: 16, defaultRotation: 120, rotationSpeed: 3, name: "8. Trhová Kamenice" },
       { id: 12, photo: 12, imgTop: 4, imgLeft: 14, defaultRotation: 140, rotationSpeed: 3, name: "9. Nasavrky" },
